@@ -1,8 +1,22 @@
-import { createDish, deleteDish, getDishDetail, getDishList, updateDish } from '@/controllers/dish.controller'
-import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
+import {
+  createDish,
+  createDishGroup,
+  deleteDish,
+  getDishGroupList,
+  getDishDetail,
+  getDishList,
+  updateDish
+} from '@/controllers/dish.controller';
+import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import {
   CreateDishBody,
   CreateDishBodyType,
+  CreateDishGroupBody,
+  CreateDishGroupBodyType,
+  DishGroupListRes,
+  DishGroupListResType,
+  DishGroupRes,
+  DishGroupResType,
   DishListRes,
   DishListResType,
   DishParams,
@@ -11,12 +25,12 @@ import {
   DishResType,
   UpdateDishBody,
   UpdateDishBodyType
-} from '@/schemaValidations/dish.schema'
-import { FastifyInstance, FastifyPluginOptions } from 'fastify'
+} from '@/schemaValidations/dish.schema';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function dishRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
   fastify.get<{
-    Reply: DishListResType
+    Reply: DishListResType;
   }>(
     '/',
     {
@@ -27,17 +41,17 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       }
     },
     async (request, reply) => {
-      const dishs = await getDishList()
+      const dishs = await getDishList();
       reply.send({
         data: dishs as DishListResType['data'],
         message: 'Lấy danh sách món ăn thành công!'
-      })
+      });
     }
-  )
+  );
 
   fastify.get<{
-    Params: DishParamsType
-    Reply: DishResType
+    Params: DishParamsType;
+    Reply: DishResType;
   }>(
     '/:id',
     {
@@ -49,17 +63,17 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       }
     },
     async (request, reply) => {
-      const dish = await getDishDetail(request.params.id)
+      const dish = await getDishDetail(request.params.id);
       reply.send({
         data: dish as DishResType['data'],
         message: 'Lấy thông tin món ăn thành công!'
-      })
+      });
     }
-  )
+  );
 
   fastify.post<{
-    Body: CreateDishBodyType
-    Reply: DishResType
+    Body: CreateDishBodyType;
+    Reply: DishResType;
   }>(
     '',
     {
@@ -75,18 +89,18 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
-      const dish = await createDish(request.body)
+      const dish = await createDish(request.body);
       reply.send({
         data: dish as DishResType['data'],
         message: 'Tạo món ăn thành công!'
-      })
+      });
     }
-  )
+  );
 
   fastify.put<{
-    Params: DishParamsType
-    Body: UpdateDishBodyType
-    Reply: DishResType
+    Params: DishParamsType;
+    Body: UpdateDishBodyType;
+    Reply: DishResType;
   }>(
     '/:id',
     {
@@ -102,17 +116,17 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
-      const dish = await updateDish(request.params.id, request.body)
+      const dish = await updateDish(request.params.id, request.body);
       reply.send({
         data: dish as DishResType['data'],
         message: 'Cập nhật món ăn thành công!'
-      })
+      });
     }
-  )
+  );
 
   fastify.delete<{
-    Params: DishParamsType
-    Reply: DishResType
+    Params: DishParamsType;
+    Reply: DishResType;
   }>(
     '/:id',
     {
@@ -127,11 +141,57 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
-      const result = await deleteDish(request.params.id)
+      const result = await deleteDish(request.params.id);
       reply.send({
         message: 'Xóa món ăn thành công!',
         data: result as DishResType['data']
-      })
+      });
     }
-  )
+  );
+
+  fastify.get<{
+    Reply: DishGroupListResType;
+  }>(
+    '/groups',
+    {
+      schema: {
+        response: {
+          200: DishGroupListRes
+        }
+      }
+    },
+    async (request, reply) => {
+      const dishCaregories = await getDishGroupList();
+      reply.send({
+        data: dishCaregories as DishGroupListResType['data'],
+        message: 'Lấy danh sách danh mục món ăn thành công!'
+      });
+    }
+  );
+
+  fastify.post<{
+    Body: CreateDishGroupBodyType;
+    Reply: DishGroupResType;
+  }>(
+    '/group',
+    {
+      schema: {
+        body: CreateDishGroupBody,
+        response: {
+          200: DishGroupRes
+        }
+      },
+      // Login AND (Owner OR Employee)
+      preValidation: fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
+    },
+    async (request, reply) => {
+      const dish = await createDishGroup(request.body);
+      reply.send({
+        data: dish as DishGroupResType['data'],
+        message: 'Tạo thành công!'
+      });
+    }
+  );
 }

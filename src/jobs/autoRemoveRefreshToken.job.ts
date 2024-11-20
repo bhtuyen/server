@@ -1,5 +1,5 @@
-import prisma from '@/database'
-import { Cron } from 'croner'
+import prisma from '@/database';
+import { Cron } from 'croner';
 
 // Cron pattern for every hour
 
@@ -12,11 +12,11 @@ const autoRemoveRefreshTokenJob = () => {
             lt: new Date()
           }
         }
-      })
+      });
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  })
-}
+  });
+};
 
-export default autoRemoveRefreshTokenJob
+export default autoRemoveRefreshTokenJob;

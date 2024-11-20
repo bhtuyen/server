@@ -1,22 +1,23 @@
-import { ManagerRoom, Role } from '@/constants/type'
-import prisma from '@/database'
-import { AuthError } from '@/utils/errors'
-import { getChalk } from '@/utils/helpers'
-import { verifyAccessToken } from '@/utils/jwt'
-import fastifyPlugin from 'fastify-plugin'
+import { ManagerRoom } from '@/constants/const';
+import { Role } from '@/constants/type';
+import prisma from '@/database';
+import { AuthError } from '@/utils/errors';
+import { getChalk } from '@/utils/helpers';
+import { verifyAccessToken } from '@/utils/jwt';
+import fastifyPlugin from 'fastify-plugin';
 
 export const socketPlugin = fastifyPlugin(async (fastify) => {
-  const chalk = await getChalk()
+  const chalk = await getChalk();
   fastify.io.use(async (socket, next) => {
-    const { Authorization } = socket.handshake.auth
+    const { Authorization } = socket.handshake.auth;
 
     if (!Authorization) {
-      return next(new AuthError('Authorization không hợp lệ'))
+      return next(new AuthError('Authorization không hợp lệ'));
     }
-    const accessToken = Authorization.split(' ')[1]
+    const accessToken = Authorization.split(' ')[1];
     try {
-      const decodedAccessToken = verifyAccessToken(accessToken)
-      const { userId, role } = decodedAccessToken
+      const decodedAccessToken = verifyAccessToken(accessToken);
+      const { userId, role } = decodedAccessToken;
       if (role === Role.Guest) {
         await prisma.socket.upsert({
           where: {
@@ -29,7 +30,7 @@ export const socketPlugin = fastifyPlugin(async (fastify) => {
             guestId: userId,
             socketId: socket.id
           }
-        })
+        });
       } else {
         await prisma.socket.upsert({
           where: {
@@ -42,19 +43,19 @@ export const socketPlugin = fastifyPlugin(async (fastify) => {
             accountId: userId,
             socketId: socket.id
           }
-        })
-        socket.join(ManagerRoom)
+        });
+        socket.join(ManagerRoom);
       }
-      socket.handshake.auth.decodedAccessToken = decodedAccessToken
+      socket.handshake.auth.decodedAccessToken = decodedAccessToken;
     } catch (error: any) {
-      return next(error)
+      return next(error);
     }
-    next()
-  })
+    next();
+  });
   fastify.io.on('connection', async (socket) => {
-    console.log(chalk.cyanBright('🔌 Socket connected:', socket.id))
+    console.log(chalk.cyanBright('🔌 Socket connected:', socket.id));
     socket.on('disconnect', async (reason) => {
-      console.log(chalk.redBright('🔌 Socket disconnected:', socket.id))
-    })
-  })
-})
+      console.log(chalk.redBright('🔌 Socket disconnected:', socket.id));
+    });
+  });
+});

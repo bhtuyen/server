@@ -1,12 +1,13 @@
-import { ManagerRoom, Role } from '@/constants/type'
+import { ManagerRoom } from '@/constants/const';
+import { Role } from '@/constants/type';
 import {
   guestCreateOrdersController,
   guestGetOrdersController,
   guestLoginController,
   guestLogoutController,
   guestRefreshTokenController
-} from '@/controllers/guest.controller'
-import { requireGuestHook, requireLoginedHook } from '@/hooks/auth.hooks'
+} from '@/controllers/guest.controller';
+import { requireGuestHook, requireLoginedHook } from '@/hooks/auth.hooks';
 import {
   LogoutBody,
   LogoutBodyType,
@@ -14,8 +15,8 @@ import {
   RefreshTokenBodyType,
   RefreshTokenRes,
   RefreshTokenResType
-} from '@/schemaValidations/auth.schema'
-import { MessageRes, MessageResType } from '@/schemaValidations/common.schema'
+} from '@/schemaValidations/auth.schema';
+import { MessageRes, MessageResType } from '@/schemaValidations/common.schema';
 import {
   GuestCreateOrdersBody,
   GuestCreateOrdersBodyType,
@@ -27,8 +28,8 @@ import {
   GuestLoginBodyType,
   GuestLoginRes,
   GuestLoginResType
-} from '@/schemaValidations/guest.schema'
-import { FastifyInstance, FastifyPluginOptions } from 'fastify'
+} from '@/schemaValidations/guest.schema';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function guestRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
   fastify.post<{ Reply: GuestLoginResType; Body: GuestLoginBodyType }>(
@@ -42,8 +43,8 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const { body } = request
-      const result = await guestLoginController(body)
+      const { body } = request;
+      const result = await guestLoginController(body);
       reply.send({
         message: 'Đăng nhập thành công',
         data: {
@@ -58,9 +59,9 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
           accessToken: result.accessToken,
           refreshToken: result.refreshToken
         }
-      })
+      });
     }
-  )
+  );
   fastify.post<{ Reply: MessageResType; Body: LogoutBodyType }>(
     '/auth/logout',
     {
@@ -73,16 +74,16 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       preValidation: fastify.auth([requireLoginedHook])
     },
     async (request, reply) => {
-      const message = await guestLogoutController(request.decodedAccessToken?.userId as number)
+      const message = await guestLogoutController(request.decodedAccessToken!.userId);
       reply.send({
         message
-      })
+      });
     }
-  )
+  );
 
   fastify.post<{
-    Reply: RefreshTokenResType
-    Body: RefreshTokenBodyType
+    Reply: RefreshTokenResType;
+    Body: RefreshTokenBodyType;
   }>(
     '/auth/refresh-token',
     {
@@ -94,17 +95,17 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const result = await guestRefreshTokenController(request.body.refreshToken)
+      const result = await guestRefreshTokenController(request.body.refreshToken);
       reply.send({
         message: 'Lấy token mới thành công',
         data: result
-      })
+      });
     }
-  )
+  );
 
   fastify.post<{
-    Reply: GuestCreateOrdersResType
-    Body: GuestCreateOrdersBodyType
+    Reply: GuestCreateOrdersResType;
+    Body: GuestCreateOrdersBodyType;
   }>(
     '/orders',
     {
@@ -117,18 +118,18 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       preValidation: fastify.auth([requireLoginedHook, requireGuestHook])
     },
     async (request, reply) => {
-      const guestId = request.decodedAccessToken?.userId as number
-      const result = await guestCreateOrdersController(guestId, request.body)
-      fastify.io.to(ManagerRoom).emit('new-order', result)
+      const guestId = request.decodedAccessToken?.userId;
+      const result = await guestCreateOrdersController(guestId!, request.body);
+      fastify.io.to(ManagerRoom).emit('new-order', result);
       reply.send({
         message: 'Đặt món thành công',
         data: result as GuestCreateOrdersResType['data']
-      })
+      });
     }
-  )
+  );
 
   fastify.get<{
-    Reply: GuestGetOrdersResType
+    Reply: GuestGetOrdersResType;
   }>(
     '/orders',
     {
@@ -140,12 +141,12 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       preValidation: fastify.auth([requireLoginedHook, requireGuestHook])
     },
     async (request, reply) => {
-      const guestId = request.decodedAccessToken?.userId as number
-      const result = await guestGetOrdersController(guestId)
+      const guestId = request.decodedAccessToken?.userId;
+      const result = await guestGetOrdersController(guestId!);
       reply.send({
         message: 'Lấy danh sách đơn hàng thành công',
         data: result as GuestGetOrdersResType['data']
-      })
+      });
     }
-  )
+  );
 }

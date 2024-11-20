@@ -5,7 +5,8 @@ generator dbml {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -14,16 +15,17 @@ datasource db {
 }
 
 model Account {
-  id           Int            @id @default(autoincrement())
-  name         String
-  email        String         @unique
-  password     String
-  avatar       String?
-  role         String         @default("Employee") // Owner, Employee
+  id           String         @id @default(uuid()) @db.Char(36)
+  name         String         @db.VarChar(255)
+  email        String         @unique @db.VarChar(255)
+  password     String         @db.VarChar(255)
+  avatar       String?        @db.VarChar(255)
+  role         String         @default("Employee") @db.VarChar(50)
   orders       Order[]
   employees    Account[]      @relation("OwnerEmployee")
   owner        Account?       @relation("OwnerEmployee", fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  ownerId      Int?
+  ownerId      String?        @db.Char(36)
+  isVerified   Boolean?       @default(false)
   refreshToken RefreshToken[]
   sockets      Socket[]
   createdAt    DateTime       @default(now())
@@ -31,73 +33,91 @@ model Account {
 }
 
 model Dish {
-  id            Int            @id @default(autoincrement())
-  name          String
+  id            String         @id @default(uuid()) @db.Char(36)
+  name          String         @db.VarChar(255)
   price         Int
-  description   String
-  image         String
-  status        String         @default("Available")
+  description   String         @db.Text
+  image         String         @db.VarChar(255)
+  status        String         @default("Available") @db.VarChar(50)
+  category      String         @default("Buffet") @db.VarChar(50)
+  options       String         @db.Text
   dishSnapshots DishSnapshot[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  group         DishGroup      @relation(fields: [groupId], references: [id])
+  groupId       String         @db.Char(36)
 }
 
 model DishSnapshot {
-  id          Int      @id @default(autoincrement())
-  name        String
+  id          String    @id @default(uuid()) @db.Char(36)
+  name        String    @db.VarChar(255)
   price       Int
-  description String
-  image       String
-  status      String   @default("Available")
-  dishId      Int?
-  dish        Dish?    @relation(fields: [dishId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  description String    @db.Text
+  image       String    @db.VarChar(255)
+  status      String    @default("Available") @db.VarChar(50)
+  category    String    @default("Buffet") @db.VarChar(50)
+  options     String    @db.Text
+  dishId      String?   @db.Char(36)
+  dish        Dish?     @relation(fields: [dishId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
   order       Order?
+  group       DishGroup @relation(fields: [groupId], references: [id])
+  groupId     String    @db.Char(36)
+}
+
+model DishGroup {
+  id             String         @id @default(uuid()) @db.Char(36)
+  name           String         @unique @db.VarChar(255)
+  code           String         @unique @db.VarChar(50)
+  dishes         Dish[]
+  disheSnapshots DishSnapshot[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model Table {
-  number    Int      @id
+  number    String   @id @db.VarChar(50)
   capacity  Int
   orders    Order[]
   guests    Guest[]
-  status    String   @default("Available")
-  token     String
+  status    String   @default("Available") @db.VarChar(50)
+  token     String   @db.VarChar(255)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Order {
-  id             Int          @id @default(autoincrement())
-  guestId        Int?
+  id             String       @id @default(uuid())
+  guestId        String?      @db.Char(36)
   guest          Guest?       @relation(fields: [guestId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   table          Table?       @relation(fields: [tableNumber], references: [number], onDelete: SetNull, onUpdate: NoAction)
-  tableNumber    Int?
+  tableNumber    String?      @db.VarChar(50)
   dishSnapshot   DishSnapshot @relation(fields: [dishSnapshotId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  dishSnapshotId Int          @unique
+  dishSnapshotId String       @unique @db.Char(36)
   quantity       Int
   orderHandler   Account?     @relation(fields: [orderHandlerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  orderHandlerId Int?
-  status         String       @default("Pending")
+  orderHandlerId String?      @db.Char(36)
+  status         String       @default("Pending") @db.VarChar(50)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
 
 model RefreshToken {
-  token     String   @id
-  accountId Int
+  token     String   @id @db.VarChar(255)
+  accountId String   @db.Char(36)
   account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
 
 model Guest {
-  id                    Int       @id @default(autoincrement())
-  name                  String
+  id                    String    @id @default(uuid()) @db.Char(36)
+  name                  String    @db.VarChar(255)
   table                 Table?    @relation(fields: [tableNumber], references: [number], onDelete: SetNull, onUpdate: NoAction)
-  tableNumber           Int?
+  tableNumber           String?   @db.VarChar(50)
   orders                Order[]
-  refreshToken          String?
+  refreshToken          String?   @db.VarChar(255)
   refreshTokenExpiresAt DateTime?
   sockets               Socket[]
   createdAt             DateTime  @default(now())
@@ -105,9 +125,9 @@ model Guest {
 }
 
 model Socket {
-  socketId  String   @id
-  accountId Int?     @unique
+  socketId  String   @id @default(uuid()) @db.Char(36)
+  accountId String?  @unique @db.Char(36)
   account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  guestId   Int?     @unique
+  guestId   String?  @unique @db.Char(36)
   guest     Guest?   @relation(fields: [guestId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 }

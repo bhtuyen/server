@@ -1,20 +1,20 @@
-import fs from 'fs'
-import path from 'path'
-import z from 'zod'
-import { config } from 'dotenv'
+import fs from 'fs';
+import path from 'path';
+import z from 'zod';
+import { config } from 'dotenv';
 
 config({
   path: '.env'
-})
+});
 
 const checkEnv = async () => {
-  const chalk = (await import('chalk')).default
+  const chalk = (await import('chalk')).default;
   if (!fs.existsSync(path.resolve('.env'))) {
-    console.log(chalk.red(`Không tìm thấy file môi trường .env`))
-    process.exit(1)
+    console.log(chalk.red(`Không tìm thấy file môi trường .env`));
+    process.exit(1);
   }
-}
-checkEnv()
+};
+checkEnv();
 
 const configSchema = z.object({
   PORT: z.coerce.number().default(4000),
@@ -30,6 +30,7 @@ const configSchema = z.object({
   DOMAIN: z.string(),
   PROTOCOL: z.string(),
   UPLOAD_FOLDER: z.string(),
+  UPLOAD_FOLDER_TEMP: z.string(),
   CLIENT_URL: z.string(),
   GOOGLE_REDIRECT_CLIENT_URL: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
@@ -37,20 +38,27 @@ const configSchema = z.object({
   GOOGLE_AUTHORIZED_REDIRECT_URI: z.string(),
   PRODUCTION: z.enum(['true', 'false']).transform((val) => val === 'true'),
   PRODUCTION_URL: z.string(),
-  SERVER_TIMEZONE: z.string()
-})
+  SERVER_TIMEZONE: z.string(),
+  GOOGLE_BUCKET_TYPE: z.string(),
+  GOOGLE_BUCKET_PROJECT_ID: z.string(),
+  GOOGLE_BUCKET_PRIVATE_KEY_ID: z.string(),
+  GOOGLE_BUCKET_PRIVATE_KEY: z.string(),
+  GOOGLE_BUCKET_CLIENT_MAIL: z.string(),
+  GOOGLE_BUCKET_CLIENT_ID: z.string(),
+  GOOGLE_BUCKET_NAME: z.string()
+});
 
-const configServer = configSchema.safeParse(process.env)
+const configServer = configSchema.safeParse(process.env);
 
 if (!configServer.success) {
-  console.error(configServer.error.issues)
-  throw new Error('Các giá trị khai báo trong file .env không hợp lệ')
+  console.error(configServer.error.issues);
+  throw new Error('Các giá trị khai báo trong file .env không hợp lệ');
 }
-const envConfig = configServer.data
+const envConfig = configServer.data;
 export const API_URL = envConfig.PRODUCTION
   ? envConfig.PRODUCTION_URL
-  : `${envConfig.PROTOCOL}://${envConfig.DOMAIN}:${envConfig.PORT}`
-export default envConfig
+  : `${envConfig.PROTOCOL}://${envConfig.DOMAIN}:${envConfig.PORT}`;
+export default envConfig;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

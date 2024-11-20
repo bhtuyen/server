@@ -1,24 +1,23 @@
-import envConfig from '@/config'
-import { PrismaErrorCode } from '@/constants/error-reference'
-import { Role, TableStatus } from '@/constants/type'
-import prisma from '@/database'
+import envConfig from '@/config';
+import { PrismaErrorCode } from '@/constants/error-reference';
+import { Role, TableStatus } from '@/constants/type';
+import prisma from '@/database';
 import {
   ChangePasswordBodyType,
   CreateEmployeeAccountBodyType,
   CreateGuestBodyType,
   UpdateEmployeeAccountBodyType,
   UpdateMeBodyType
-} from '@/schemaValidations/account.schema'
-import { RoleType } from '@/types/jwt.types'
-import { comparePassword, hashPassword } from '@/utils/crypto'
-import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors'
-import { getChalk } from '@/utils/helpers'
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt'
+} from '@/schemaValidations/account.schema';
+import { comparePassword, hashPassword } from '@/utils/crypto';
+import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
+import { getChalk } from '@/utils/helpers';
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
 
 export const initOwnerAccount = async () => {
-  const accountCount = await prisma.account.count()
+  const accountCount = await prisma.account.count();
   if (accountCount === 0) {
-    const hashedPassword = await hashPassword(envConfig.INITIAL_PASSWORD_OWNER)
+    const hashedPassword = await hashPassword(envConfig.INITIAL_PASSWORD_OWNER);
     await prisma.account.create({
       data: {
         name: 'Owner',
@@ -26,19 +25,19 @@ export const initOwnerAccount = async () => {
         password: hashedPassword,
         role: Role.Owner
       }
-    })
-    const chalk = await getChalk()
+    });
+    const chalk = await getChalk();
     console.log(
       chalk.bgCyan(
         `Khởi tạo tài khoản chủ quán thành công: ${envConfig.INITIAL_EMAIL_OWNER}|${envConfig.INITIAL_PASSWORD_OWNER}`
       )
-    )
+    );
   }
-}
+};
 
 export const createEmployeeAccount = async (body: CreateEmployeeAccountBodyType) => {
   try {
-    const hashedPassword = await hashPassword(body.password)
+    const hashedPassword = await hashPassword(body.password);
     const account = await prisma.account.create({
       data: {
         name: body.name,
@@ -47,17 +46,17 @@ export const createEmployeeAccount = async (body: CreateEmployeeAccountBodyType)
         role: Role.Employee,
         avatar: body.avatar
       }
-    })
-    return account
+    });
+    return account;
   } catch (error: any) {
     if (isPrismaClientKnownRequestError(error)) {
       if (error.code === PrismaErrorCode.UniqueConstraintViolation) {
-        throw new EntityError([{ field: 'email', message: 'Email đã tồn tại' }])
+        throw new EntityError([{ field: 'email', message: 'Email đã tồn tại' }]);
       }
     }
-    throw error
+    throw error;
   }
-}
+};
 
 export const getEmployeeAccounts = async () => {
   const accounts = await prisma.account.findMany({
@@ -67,29 +66,29 @@ export const getEmployeeAccounts = async () => {
     orderBy: {
       createdAt: 'desc'
     }
-  })
-  return accounts
-}
+  });
+  return accounts;
+};
 
-export const getEmployeeAccount = async (accountId: number) => {
+export const getEmployeeAccount = async (accountId: string) => {
   const account = await prisma.account.findUniqueOrThrow({
     where: {
       id: accountId
     }
-  })
-  return account
-}
+  });
+  return account;
+};
 
 export const getAccountList = async () => {
   const account = await prisma.account.findMany({
     orderBy: {
       createdAt: 'desc'
     }
-  })
-  return account
-}
+  });
+  return account;
+};
 
-export const updateEmployeeAccount = async (accountId: number, body: UpdateEmployeeAccountBodyType) => {
+export const updateEmployeeAccount = async (accountId: string, body: UpdateEmployeeAccountBodyType) => {
   try {
     const [socketRecord, oldAccount] = await Promise.all([
       prisma.socket.findUnique({
@@ -102,13 +101,13 @@ export const updateEmployeeAccount = async (accountId: number, body: UpdateEmplo
           id: accountId
         }
       })
-    ])
+    ]);
     if (!oldAccount) {
-      throw new EntityError([{ field: 'email', message: 'Tài khoản bạn đang cập nhật không còn tồn tại nữa!' }])
+      throw new EntityError([{ field: 'email', message: 'Tài khoản bạn đang cập nhật không còn tồn tại nữa!' }]);
     }
-    const isChangeRole = oldAccount.role !== body.role
+    const isChangeRole = oldAccount.role !== body.role;
     if (body.changePassword) {
-      const hashedPassword = await hashPassword(body.password!)
+      const hashedPassword = await hashPassword(body.password!);
       const account = await prisma.account.update({
         where: {
           id: accountId
@@ -120,12 +119,12 @@ export const updateEmployeeAccount = async (accountId: number, body: UpdateEmplo
           password: hashedPassword,
           role: body.role
         }
-      })
+      });
       return {
         account,
         socketId: socketRecord?.socketId,
         isChangeRole
-      }
+      };
     } else {
       const account = await prisma.account.update({
         where: {
@@ -137,70 +136,70 @@ export const updateEmployeeAccount = async (accountId: number, body: UpdateEmplo
           avatar: body.avatar,
           role: body.role
         }
-      })
+      });
       return {
         account,
         socketId: socketRecord?.socketId,
         isChangeRole
-      }
+      };
     }
   } catch (error: any) {
     if (isPrismaClientKnownRequestError(error)) {
       if (error.code === PrismaErrorCode.UniqueConstraintViolation) {
-        throw new EntityError([{ field: 'email', message: 'Email đã tồn tại' }])
+        throw new EntityError([{ field: 'email', message: 'Email đã tồn tại' }]);
       }
     }
-    throw error
+    throw error;
   }
-}
+};
 
-export const deleteEmployeeAccount = async (accountId: number) => {
+export const deleteEmployeeAccount = async (accountId: string) => {
   const socketRecord = await prisma.socket.findUnique({
     where: {
       accountId
     }
-  })
+  });
   const account = await prisma.account.delete({
     where: {
       id: accountId
     }
-  })
+  });
   return {
     account,
     socketId: socketRecord?.socketId
-  }
-}
+  };
+};
 
-export const getMeController = async (accountId: number) => {
+export const getMeController = async (accountId: string) => {
   const account = prisma.account.findUniqueOrThrow({
     where: {
       id: accountId
     }
-  })
-  return account
-}
+  });
+  return account;
+};
 
-export const updateMeController = async (accountId: number, body: UpdateMeBodyType) => {
+export const updateMeController = async (accountId: string, body: UpdateMeBodyType) => {
   const account = prisma.account.update({
     where: {
       id: accountId
     },
     data: body
-  })
-  return account
-}
+  });
+  return account;
+};
 
-export const changePasswordController = async (accountId: number, body: ChangePasswordBodyType) => {
+export const changePasswordController = async (accountId: string, body: ChangePasswordBodyType) => {
   const account = await prisma.account.findUniqueOrThrow({
     where: {
       id: accountId
     }
-  })
-  const isSame = await comparePassword(body.oldPassword, account.password)
+  });
+  const isSame = await comparePassword(body.oldPassword, account.password);
   if (!isSame) {
-    throw new EntityError([{ field: 'oldPassword', message: 'Mật khẩu cũ không đúng' }])
+    throw new EntityError([{ field: 'oldPassword', message: 'Mật khẩu cũ không đúng' }]);
   }
-  const hashedPassword = await hashPassword(body.password)
+  const hashedPassword = await hashPassword(body.password);
   const newAccount = await prisma.account.update({
     where: {
       id: accountId
@@ -208,40 +207,40 @@ export const changePasswordController = async (accountId: number, body: ChangePa
     data: {
       password: hashedPassword
     }
-  })
-  return newAccount
-}
+  });
+  return newAccount;
+};
 
-export const changePasswordV2Controller = async (accountId: number, body: ChangePasswordBodyType) => {
-  const account = await changePasswordController(accountId, body)
+export const changePasswordV2Controller = async (accountId: string, body: ChangePasswordBodyType) => {
+  const account = await changePasswordController(accountId, body);
   await prisma.refreshToken.deleteMany({
     where: {
       accountId
     }
-  })
+  });
   const accessToken = signAccessToken({
     userId: account.id,
-    role: account.role as RoleType
-  })
+    role: account.role as Role
+  });
   const refreshToken = signRefreshToken({
     userId: account.id,
-    role: account.role as RoleType
-  })
-  const decodedRefreshToken = verifyRefreshToken(refreshToken)
-  const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000)
+    role: account.role as Role
+  });
+  const decodedRefreshToken = verifyRefreshToken(refreshToken);
+  const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
   await prisma.refreshToken.create({
     data: {
       accountId: account.id,
       token: refreshToken,
       expiresAt: refreshTokenExpiresAt
     }
-  })
+  });
   return {
     account,
     accessToken,
     refreshToken
-  }
-}
+  };
+};
 
 export const getGuestList = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {
   const orders = await prisma.guest.findMany({
@@ -254,25 +253,25 @@ export const getGuestList = async ({ fromDate, toDate }: { fromDate?: Date; toDa
         lte: toDate
       }
     }
-  })
-  return orders
-}
+  });
+  return orders;
+};
 
 export const createGuestController = async (body: CreateGuestBodyType) => {
   const table = await prisma.table.findUnique({
     where: {
       number: body.tableNumber
     }
-  })
+  });
   if (!table) {
-    throw new Error('Bàn không tồn tại')
+    throw new Error('Bàn không tồn tại');
   }
 
   if (table.status === TableStatus.Hidden) {
-    throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn bàn khác`)
+    throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn bàn khác`);
   }
   const guest = await prisma.guest.create({
     data: body
-  })
-  return guest
-}
+  });
+  return guest;
+};

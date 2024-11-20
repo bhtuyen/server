@@ -1,24 +1,24 @@
-import { DishStatus, OrderStatus, TableStatus } from '@/constants/type'
-import prisma from '@/database'
-import { CreateOrdersBodyType, UpdateOrderBodyType } from '@/schemaValidations/order.schema'
+import { DishStatus, OrderStatus, TableStatus } from '@/constants/type';
+import prisma from '@/database';
+import { CreateOrdersBodyType, UpdateOrderBodyType } from '@/schemaValidations/order.schema';
 
-export const createOrdersController = async (orderHandlerId: number, body: CreateOrdersBodyType) => {
-  const { guestId, orders } = body
+export const createOrdersController = async (orderHandlerId: string, body: CreateOrdersBodyType) => {
+  const { guestId, orders } = body;
   const guest = await prisma.guest.findUniqueOrThrow({
     where: {
       id: guestId
     }
-  })
+  });
   if (guest.tableNumber === null) {
-    throw new Error('Bàn gắn liền với khách hàng này đã bị xóa, vui lòng chọn khách hàng khác!')
+    throw new Error('Bàn gắn liền với khách hàng này đã bị xóa, vui lòng chọn khách hàng khác!');
   }
   const table = await prisma.table.findUniqueOrThrow({
     where: {
       number: guest.tableNumber
     }
-  })
+  });
   if (table.status === TableStatus.Hidden) {
-    throw new Error(`Bàn ${table.number} gắn liền với khách hàng đã bị ẩn, vui lòng chọn khách hàng khác!`)
+    throw new Error(`Bàn ${table.number} gắn liền với khách hàng đã bị ẩn, vui lòng chọn khách hàng khác!`);
   }
 
   const [ordersRecord, socketRecord] = await Promise.all([
@@ -29,12 +29,12 @@ export const createOrdersController = async (orderHandlerId: number, body: Creat
             where: {
               id: order.dishId
             }
-          })
+          });
           if (dish.status === DishStatus.Unavailable) {
-            throw new Error(`Món ${dish.name} đã hết`)
+            throw new Error(`Món ${dish.name} đã hết`);
           }
           if (dish.status === DishStatus.Hidden) {
-            throw new Error(`Món ${dish.name} không thể đặt`)
+            throw new Error(`Món ${dish.name} không thể đặt`);
           }
           const dishSnapshot = await tx.dishSnapshot.create({
             data: {
@@ -42,10 +42,13 @@ export const createOrdersController = async (orderHandlerId: number, body: Creat
               image: dish.image,
               name: dish.name,
               price: dish.price,
+              category: dish.category,
+              groupId: dish.groupId,
+              options: dish.options,
               dishId: dish.id,
               status: dish.status
             }
-          })
+          });
           const orderRecord = await tx.order.create({
             data: {
               dishSnapshotId: dishSnapshot.id,
@@ -60,29 +63,29 @@ export const createOrdersController = async (orderHandlerId: number, body: Creat
               guest: true,
               orderHandler: true
             }
-          })
-          type OrderRecord = typeof orderRecord
+          });
+          type OrderRecord = typeof orderRecord;
           return orderRecord as OrderRecord & {
-            status: (typeof OrderStatus)[keyof typeof OrderStatus]
+            status: (typeof OrderStatus)[keyof typeof OrderStatus];
             dishSnapshot: OrderRecord['dishSnapshot'] & {
-              status: (typeof DishStatus)[keyof typeof DishStatus]
-            }
-          }
+              status: (typeof DishStatus)[keyof typeof DishStatus];
+            };
+          };
         })
-      )
-      return ordersRecord
+      );
+      return ordersRecord;
     }),
     prisma.socket.findUnique({
       where: {
         guestId: body.guestId
       }
     })
-  ])
+  ]);
   return {
     orders: ordersRecord,
     socketId: socketRecord?.socketId
-  }
-}
+  };
+};
 
 export const getOrdersController = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {
   const orders = await prisma.order.findMany({
@@ -100,12 +103,12 @@ export const getOrdersController = async ({ fromDate, toDate }: { fromDate?: Dat
         lte: toDate
       }
     }
-  })
-  return orders
-}
+  });
+  return orders;
+};
 
 // Controller thanh toán các hóa đơn dựa trên guestId
-export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId: number; orderHandlerId: number }) => {
+export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId: string; orderHandlerId: string }) => {
   const orders = await prisma.order.findMany({
     where: {
       guestId,
@@ -113,12 +116,12 @@ export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId
         in: [OrderStatus.Pending, OrderStatus.Processing, OrderStatus.Delivered]
       }
     }
-  })
+  });
   if (orders.length === 0) {
-    throw new Error('Không có hóa đơn nào cần thanh toán')
+    throw new Error('Không có hóa đơn nào cần thanh toán');
   }
   await prisma.$transaction(async (tx) => {
-    const orderIds = orders.map((order) => order.id)
+    const orderIds = orders.map((order) => order.id);
     const updatedOrders = await tx.order.updateMany({
       where: {
         id: {
@@ -129,9 +132,9 @@ export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId
         status: OrderStatus.Paid,
         orderHandlerId
       }
-    })
-    return updatedOrders
-  })
+    });
+    return updatedOrders;
+  });
   const [ordersResult, sockerRecord] = await Promise.all([
     prisma.order.findMany({
       where: {
@@ -153,14 +156,14 @@ export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId
         guestId
       }
     })
-  ])
+  ]);
   return {
     orders: ordersResult,
     socketId: sockerRecord?.socketId
-  }
-}
+  };
+};
 
-export const getOrderDetailController = (orderId: number) => {
+export const getOrderDetailController = (orderId: string) => {
   return prisma.order.findUniqueOrThrow({
     where: {
       id: orderId
@@ -171,14 +174,14 @@ export const getOrderDetailController = (orderId: number) => {
       guest: true,
       table: true
     }
-  })
-}
+  });
+};
 
 export const updateOrderController = async (
-  orderId: number,
-  body: UpdateOrderBodyType & { orderHandlerId: number }
+  orderId: string,
+  body: UpdateOrderBodyType & { orderHandlerId: string }
 ) => {
-  const { status, dishId, quantity, orderHandlerId } = body
+  const { status, dishId, quantity, orderHandlerId } = body;
   const result = await prisma.$transaction(async (tx) => {
     const order = await prisma.order.findUniqueOrThrow({
       where: {
@@ -187,25 +190,28 @@ export const updateOrderController = async (
       include: {
         dishSnapshot: true
       }
-    })
-    let dishSnapshotId = order.dishSnapshotId
+    });
+    let dishSnapshotId = order.dishSnapshotId;
     if (order.dishSnapshot.dishId !== dishId) {
       const dish = await tx.dish.findUniqueOrThrow({
         where: {
           id: dishId
         }
-      })
+      });
       const dishSnapshot = await tx.dishSnapshot.create({
         data: {
           description: dish.description,
           image: dish.image,
           name: dish.name,
+          category: dish.category,
+          groupId: dish.groupId,
+          options: dish.options,
           price: dish.price,
           dishId: dish.id,
           status: dish.status
         }
-      })
-      dishSnapshotId = dishSnapshot.id
+      });
+      dishSnapshotId = dishSnapshot.id;
     }
     const newOrder = await tx.order.update({
       where: {
@@ -222,16 +228,16 @@ export const updateOrderController = async (
         orderHandler: true,
         guest: true
       }
-    })
-    return newOrder
-  })
+    });
+    return newOrder;
+  });
   const socketRecord = await prisma.socket.findUnique({
     where: {
       guestId: result.guestId!
     }
-  })
+  });
   return {
     order: result,
     socketId: socketRecord?.socketId
-  }
-}
+  };
+};

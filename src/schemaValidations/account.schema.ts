@@ -1,32 +1,33 @@
-import { Role } from '@/constants/type'
-import { LoginRes } from '@/schemaValidations/auth.schema'
-import z from 'zod'
+import { Role } from '@/constants/type';
+import { LoginRes } from '@/schemaValidations/auth.schema';
+import z from 'zod';
 
 export const AccountSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   name: z.string(),
-  email: z.string(),
-  role: z.enum([Role.Owner, Role.Employee]),
-  avatar: z.string().nullable()
-})
+  email: z.string().email(),
+  role: z.enum([Role.Employee, Role.Owner]),
+  avatar: z.string().url().nullable(),
+  isVerified: z.boolean().nullable()
+});
 
-export type AccountType = z.TypeOf<typeof AccountSchema>
+export type AccountType = z.TypeOf<typeof AccountSchema>;
 
 export const AccountListRes = z.object({
   data: z.array(AccountSchema),
   message: z.string()
-})
+});
 
-export type AccountListResType = z.TypeOf<typeof AccountListRes>
+export type AccountListResType = z.TypeOf<typeof AccountListRes>;
 
 export const AccountRes = z
   .object({
     data: AccountSchema,
     message: z.string()
   })
-  .strict()
+  .strict();
 
-export type AccountResType = z.TypeOf<typeof AccountRes>
+export type AccountResType = z.TypeOf<typeof AccountRes>;
 
 export const CreateEmployeeAccountBody = z
   .object({
@@ -43,11 +44,11 @@ export const CreateEmployeeAccountBody = z
         code: 'custom',
         message: 'Mật khẩu không khớp',
         path: ['confirmPassword']
-      })
+      });
     }
-  })
+  });
 
-export type CreateEmployeeAccountBodyType = z.TypeOf<typeof CreateEmployeeAccountBody>
+export type CreateEmployeeAccountBodyType = z.TypeOf<typeof CreateEmployeeAccountBody>;
 
 export const UpdateEmployeeAccountBody = z
   .object({
@@ -57,7 +58,7 @@ export const UpdateEmployeeAccountBody = z
     changePassword: z.boolean().optional(),
     password: z.string().min(6).max(100).optional(),
     confirmPassword: z.string().min(6).max(100).optional(),
-    role: z.enum([Role.Owner, Role.Employee]).optional().default(Role.Employee)
+    role: z.enum([Role.Employee, Role.Owner]).optional().default(Role.Employee)
   })
   .strict()
   .superRefine(({ confirmPassword, password, changePassword }, ctx) => {
@@ -67,27 +68,27 @@ export const UpdateEmployeeAccountBody = z
           code: 'custom',
           message: 'Hãy nhập mật khẩu mới và xác nhận mật khẩu mới',
           path: ['changePassword']
-        })
+        });
       } else if (confirmPassword !== password) {
         ctx.addIssue({
           code: 'custom',
           message: 'Mật khẩu không khớp',
           path: ['confirmPassword']
-        })
+        });
       }
     }
-  })
+  });
 
-export type UpdateEmployeeAccountBodyType = z.TypeOf<typeof UpdateEmployeeAccountBody>
+export type UpdateEmployeeAccountBodyType = z.TypeOf<typeof UpdateEmployeeAccountBody>;
 
 export const UpdateMeBody = z
   .object({
     name: z.string().trim().min(2).max(256),
     avatar: z.string().url().optional()
   })
-  .strict()
+  .strict();
 
-export type UpdateMeBodyType = z.TypeOf<typeof UpdateMeBody>
+export type UpdateMeBodyType = z.TypeOf<typeof UpdateMeBody>;
 
 export const ChangePasswordBody = z
   .object({
@@ -102,67 +103,67 @@ export const ChangePasswordBody = z
         code: 'custom',
         message: 'Mật khẩu mới không khớp',
         path: ['confirmPassword']
-      })
+      });
     }
-  })
+  });
 
-export type ChangePasswordBodyType = z.TypeOf<typeof ChangePasswordBody>
+export type ChangePasswordBodyType = z.TypeOf<typeof ChangePasswordBody>;
 
-export const ChangePasswordV2Body = ChangePasswordBody
+export const ChangePasswordV2Body = ChangePasswordBody;
 
-export type ChangePasswordV2BodyType = z.TypeOf<typeof ChangePasswordV2Body>
+export type ChangePasswordV2BodyType = z.TypeOf<typeof ChangePasswordV2Body>;
 
-export const ChangePasswordV2Res = LoginRes
+export const ChangePasswordV2Res = LoginRes;
 
-export type ChangePasswordV2ResType = z.TypeOf<typeof ChangePasswordV2Res>
+export type ChangePasswordV2ResType = z.TypeOf<typeof ChangePasswordV2Res>;
 
 export const AccountIdParam = z.object({
-  id: z.coerce.number()
-})
+  id: z.string().uuid()
+});
 
-export type AccountIdParamType = z.TypeOf<typeof AccountIdParam>
+export type AccountIdParamType = z.TypeOf<typeof AccountIdParam>;
 
 export const GetListGuestsRes = z.object({
   data: z.array(
     z.object({
-      id: z.number(),
+      id: z.string().uuid(),
       name: z.string(),
-      tableNumber: z.number().nullable(),
+      tableNumber: z.string().nullable(),
       createdAt: z.date(),
       updatedAt: z.date()
     })
   ),
   message: z.string()
-})
+});
 
-export type GetListGuestsResType = z.TypeOf<typeof GetListGuestsRes>
+export type GetListGuestsResType = z.TypeOf<typeof GetListGuestsRes>;
 
 export const GetGuestListQueryParams = z.object({
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional()
-})
+});
 
-export type GetGuestListQueryParamsType = z.TypeOf<typeof GetGuestListQueryParams>
+export type GetGuestListQueryParamsType = z.TypeOf<typeof GetGuestListQueryParams>;
 
 export const CreateGuestBody = z
   .object({
-    name: z.string().trim().min(2).max(256),
-    tableNumber: z.number()
+    name: z.string().trim().min(2).max(255),
+    tableNumber: z.string().min(1).max(50)
   })
-  .strict()
+  .strict();
 
-export type CreateGuestBodyType = z.TypeOf<typeof CreateGuestBody>
+export type CreateGuestBodyType = z.TypeOf<typeof CreateGuestBody>;
 
 export const CreateGuestRes = z.object({
   message: z.string(),
   data: z.object({
-    id: z.number(),
-    name: z.string(),
+    id: z.string().uuid(),
+    name: z.string().nullable(),
     role: z.enum([Role.Guest]),
-    tableNumber: z.number().nullable(),
+    tableNumber: z.string().min(1).max(50),
     createdAt: z.date(),
     updatedAt: z.date()
   })
-})
+});
 
-export type CreateGuestResType = z.TypeOf<typeof CreateGuestRes>
+export type CreateGuestResType = z.TypeOf<typeof CreateGuestRes>;

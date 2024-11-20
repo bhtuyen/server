@@ -1,16 +1,16 @@
-import envConfig from '@/config'
-import { TokenType } from '@/constants/type'
-import { TokenPayload } from '@/types/jwt.types'
-import { PrivateKey, SignerOptions, createSigner, createVerifier } from 'fast-jwt'
-import ms from 'ms'
+import envConfig from '@/config';
+import { Token } from '@/constants/type';
+import { TokenPayload } from '@/types/jwt.types';
+import { PrivateKey, SignerOptions, createSigner, createVerifier } from 'fast-jwt';
+import ms from 'ms';
 
 export const signAccessToken = (
   payload: Pick<TokenPayload, 'userId' | 'role'> & {
-    exp?: number
+    exp?: number;
   },
   options?: SignerOptions
 ) => {
-  const { exp } = payload
+  const { exp } = payload;
   const optionSigner: Partial<SignerOptions & { key: string | Buffer | PrivateKey }> = exp
     ? {
         key: envConfig.ACCESS_TOKEN_SECRET,
@@ -22,18 +22,18 @@ export const signAccessToken = (
         algorithm: 'HS256',
         expiresIn: ms(envConfig.ACCESS_TOKEN_EXPIRES_IN),
         ...options
-      }
-  const signSync = createSigner(optionSigner)
-  return signSync({ ...payload, tokenType: TokenType.AccessToken })
-}
+      };
+  const signSync = createSigner(optionSigner);
+  return signSync({ ...payload, tokenType: Token.AccessToken });
+};
 
 export const signRefreshToken = (
   payload: Pick<TokenPayload, 'userId' | 'role'> & {
-    exp?: number
+    exp?: number;
   },
   options?: SignerOptions
 ) => {
-  const { exp } = payload
+  const { exp } = payload;
   const optionSigner: Partial<SignerOptions & { key: string | Buffer | PrivateKey }> = exp
     ? {
         key: envConfig.REFRESH_TOKEN_SECRET,
@@ -45,21 +45,21 @@ export const signRefreshToken = (
         algorithm: 'HS256',
         expiresIn: ms(envConfig.REFRESH_TOKEN_EXPIRES_IN),
         ...options
-      }
-  const signSync = createSigner(optionSigner)
-  return signSync({ ...payload, tokenType: TokenType.RefreshToken })
-}
+      };
+  const signSync = createSigner(optionSigner);
+  return signSync({ ...payload, tokenType: Token.RefreshToken });
+};
 
 export const verifyAccessToken = (token: string) => {
   const verifySync = createVerifier({
     key: envConfig.ACCESS_TOKEN_SECRET
-  })
-  return verifySync(token) as TokenPayload
-}
+  });
+  return verifySync(token) as TokenPayload;
+};
 
 export const verifyRefreshToken = (token: string) => {
   const verifySync = createVerifier({
     key: envConfig.REFRESH_TOKEN_SECRET
-  })
-  return verifySync(token) as TokenPayload
-}
+  });
+  return verifySync(token) as TokenPayload;
+};
