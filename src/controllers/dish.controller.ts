@@ -1,25 +1,64 @@
 import prisma from '@/database';
-import { CreateDishBodyType, CreateDishGroupBodyType, UpdateDishBodyType } from '@/schemaValidations/dish.schema';
+import { CreateDish, CreateDishGroupBodyType, UpdateDish } from '@/schemaValidations/dish.schema';
 
-export const getDishList = async () => {
-  const resutl = await prisma.dish.findMany({
-    include: {
-      group: {
-        select: {
-          name: true
-        }
-      }
-    },
+const select = {
+  id: true,
+  name: true,
+  price: true,
+  group: {
+    select: {
+      name: true
+    }
+  },
+  groupId: true,
+  category: true,
+  options: true,
+  description: true,
+  image: true,
+  status: true
+};
+
+export const getDishes = async () => {
+  return await prisma.dish.findMany({
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    select
   });
+};
 
-  return resutl.map((dish) => {
-    return {
-      ...dish,
-      groupName: dish.group.name
-    };
+export const getDish = (id: string) => {
+  return prisma.dish.findFirstOrThrow({
+    where: {
+      id
+    },
+    select
+  });
+};
+
+export const createDish = (data: CreateDish) => {
+  return prisma.dish.create({
+    data,
+    select
+  });
+};
+
+export const updateDish = (id: string, data: UpdateDish) => {
+  return prisma.dish.update({
+    where: {
+      id
+    },
+    data,
+    select
+  });
+};
+
+export const deleteDish = (id: string) => {
+  return prisma.dish.delete({
+    where: {
+      id
+    },
+    select
   });
 };
 
@@ -36,37 +75,6 @@ export const createDishGroup = ({ name, code }: CreateDishGroupBodyType) => {
     data: {
       name,
       code
-    }
-  });
-};
-
-export const getDishDetail = (id: string) => {
-  return prisma.dish.findUniqueOrThrow({
-    where: {
-      id
-    }
-  });
-};
-
-export const createDish = (data: CreateDishBodyType) => {
-  return prisma.dish.create({
-    data
-  });
-};
-
-export const updateDish = (id: string, data: UpdateDishBodyType) => {
-  return prisma.dish.update({
-    where: {
-      id
-    },
-    data
-  });
-};
-
-export const deleteDish = (id: string) => {
-  return prisma.dish.delete({
-    where: {
-      id
     }
   });
 };

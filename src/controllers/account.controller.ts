@@ -22,6 +22,7 @@ export const initOwnerAccount = async () => {
       data: {
         name: 'Owner',
         email: envConfig.INITIAL_EMAIL_OWNER,
+        phone: '0368239728',
         password: hashedPassword,
         role: Role.Owner
       }
@@ -43,6 +44,7 @@ export const createEmployeeAccount = async (body: CreateEmployeeAccountBodyType)
         name: body.name,
         email: body.email,
         password: hashedPassword,
+        phone: body.phone,
         role: Role.Employee,
         avatar: body.avatar
       }
@@ -116,6 +118,7 @@ export const updateEmployeeAccount = async (accountId: string, body: UpdateEmplo
           name: body.name,
           email: body.email,
           avatar: body.avatar,
+          phone: body.phone,
           password: hashedPassword,
           role: body.role
         }

@@ -7,6 +7,7 @@ export const AccountSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   role: z.enum([Role.Employee, Role.Owner]),
+  phone: z.string().min(10).max(15),
   avatar: z.string().url().nullable(),
   isVerified: z.boolean().nullable()
 });
@@ -33,6 +34,7 @@ export const CreateEmployeeAccountBody = z
   .object({
     name: z.string().trim().min(2).max(256),
     email: z.string().email(),
+    phone: z.string().min(10).max(15),
     avatar: z.string().url().optional(),
     password: z.string().min(6).max(100),
     confirmPassword: z.string().min(6).max(100)
@@ -54,6 +56,7 @@ export const UpdateEmployeeAccountBody = z
   .object({
     name: z.string().trim().min(2).max(256),
     email: z.string().email(),
+    phone: z.string().min(10).max(15),
     avatar: z.string().url().optional(),
     changePassword: z.boolean().optional(),
     password: z.string().min(6).max(100).optional(),

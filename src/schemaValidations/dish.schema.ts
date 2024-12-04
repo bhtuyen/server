@@ -1,57 +1,50 @@
-import { DishStatus, DishCategory } from '@/constants/type';
+import { DishCategory, DishStatus } from '@prisma/client';
 import z from 'zod';
 
-export const CreateDishBody = z.object({
-  name: z.string().min(1).max(255),
-  price: z.coerce.number().positive(),
-  description: z.string().max(10000),
-  category: z.enum([DishCategory.Buffet, DishCategory.Paid]),
-  groupId: z.string().uuid(),
-  options: z.string(),
-  image: z.string().url(),
-  status: z.enum([DishStatus.Available, DishStatus.Unavailable, DishStatus.Hidden])
-});
-
-export type CreateDishBodyType = z.TypeOf<typeof CreateDishBody>;
-
-export const DishSchema = z.object({
+export const dishSchema = z.object({
   id: z.string().uuid(),
-  name: z.string(),
-  price: z.coerce.number(),
-  description: z.string(),
-  image: z.string(),
-  status: z.enum([DishStatus.Available, DishStatus.Unavailable, DishStatus.Hidden]),
+  name: z.string().min(1).max(255),
+  price: z.coerce.number().nullable().optional(),
+  description: z.string().max(10000).nullable().optional(),
   category: z.enum([DishCategory.Buffet, DishCategory.Paid]),
   groupId: z.string().uuid(),
-  options: z.string(),
+  options: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  status: z.enum([DishStatus.Available, DishStatus.Unavailable, DishStatus.Hidden]),
   createdAt: z.date(),
   updatedAt: z.date()
 });
+export const dishDtoSchema = dishSchema.omit({ createdAt: true, updatedAt: true }).extend({
+  groupName: z.string()
+});
+export const createDishSchema = dishSchema.omit({ id: true, createdAt: true, updatedAt: true });
 
-export const DishRes = z.object({
-  data: DishSchema,
-  message: z.string()
+export const updateDishSchema = dishSchema.omit({ id: true, createdAt: true, updatedAt: true });
+
+export const dishResSchema = z.object({
+  data: dishDtoSchema.nullable(),
+  message: z.string().nullable()
 });
 
-export type DishResType = z.TypeOf<typeof DishRes>;
-
-export const DishListRes = z.object({
-  data: z.array(
-    DishSchema.extend({
-      groupName: z.string()
-    })
-  ),
-  message: z.string()
+export const dishesResSchema = z.object({
+  data: z.array(dishDtoSchema),
+  message: z.string().nullable()
 });
 
-export type DishListResType = z.TypeOf<typeof DishListRes>;
-
-export const UpdateDishBody = CreateDishBody;
-export type UpdateDishBodyType = CreateDishBodyType;
-export const DishParams = z.object({
+export const dishParamsSchema = z.object({
   id: z.string().uuid()
 });
-export type DishParamsType = z.TypeOf<typeof DishParams>;
+
+/**
+ *
+ */
+export type Dish = z.TypeOf<typeof dishSchema>;
+export type DishDto = z.TypeOf<typeof dishDtoSchema>;
+export type CreateDish = z.TypeOf<typeof createDishSchema>;
+export type UpdateDish = z.TypeOf<typeof updateDishSchema>;
+export type DishRes = z.TypeOf<typeof dishResSchema>;
+export type DishesRes = z.TypeOf<typeof dishesResSchema>;
+export type DishParams = z.TypeOf<typeof dishParamsSchema>;
 
 export const DishGroupSchema = z.object({
   id: z.string().uuid(),

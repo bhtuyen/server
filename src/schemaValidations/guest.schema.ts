@@ -33,7 +33,8 @@ export type GuestLoginResType = z.TypeOf<typeof GuestLoginRes>;
 export const GuestCreateOrdersBody = z.array(
   z.object({
     dishId: z.string().uuid(),
-    quantity: z.number()
+    quantity: z.number(),
+    options: z.string().nullable()
   })
 );
 

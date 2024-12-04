@@ -32,6 +32,7 @@ export const OrderSchema = z.object({
   tableNumber: z.string().nullable(),
   dishSnapshotId: z.string().uuid(),
   dishSnapshot: DishSnapshotSchema,
+  options: z.string().nullable(),
   quantity: z.number(),
   orderHandlerId: z.string().uuid().nullable(),
   orderHandler: AccountSchema.nullable(),
