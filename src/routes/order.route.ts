@@ -7,45 +7,48 @@ import {
   updateOrderController
 } from '@/controllers/order.controller';
 import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import {
-  CreateOrdersBody,
-  CreateOrdersBodyType,
-  CreateOrdersRes,
-  CreateOrdersResType,
-  GetOrderDetailRes,
-  GetOrderDetailResType,
-  GetOrdersQueryParams,
-  GetOrdersQueryParamsType,
-  GetOrdersRes,
-  GetOrdersResType,
-  OrderParam,
-  OrderParamType,
-  PayGuestOrdersBody,
-  PayGuestOrdersBodyType,
-  PayGuestOrdersRes,
-  PayGuestOrdersResType,
-  UpdateOrderBody,
-  UpdateOrderBodyType,
-  UpdateOrderRes,
-  UpdateOrderResType
+import type { IdParam, PeriodParam } from '@/schemaValidations/common.schema';
+import { idParam, periodParam } from '@/schemaValidations/common.schema';
+import type {
+  CreateOrders,
+  GuestPayOrders,
+  OrderDtoDetailRes,
+  OrdersDtoDetailRes,
+  UpdateOrder
 } from '@/schemaValidations/order.schema';
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import {
+  createOrders,
+  guestPayOrders,
+  orderDtoDetailRes,
+  ordersDtoDetailRes,
+  updateOrder
+} from '@/schemaValidations/order.schema';
+import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function orderRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+  /**
+   *
+   */
   fastify.addHook(
     'preValidation',
     fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
       relation: 'and'
     })
   );
-  fastify.post<{ Reply: CreateOrdersResType; Body: CreateOrdersBodyType }>(
+
+  /**
+   * @POST /api/orders
+   * @description Create orders for guest
+   * @author bhtuyen
+   */
+  fastify.post<{ Reply: OrdersDtoDetailRes; Body: CreateOrders }>(
     '/',
     {
       schema: {
         response: {
-          200: CreateOrdersRes
+          200: ordersDtoDetailRes
         },
-        body: CreateOrdersBody
+        body: createOrders
       }
     },
     async (request, reply) => {
@@ -57,67 +60,76 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
       reply.send({
         message: `Tạo thành công ${orders.length} đơn hàng cho khách hàng`,
-        data: orders as CreateOrdersResType['data']
+        data: orders
       });
     }
   );
-  fastify.get<{ Reply: GetOrdersResType; Querystring: GetOrdersQueryParamsType }>(
+
+  /**
+   * @GET /api/orders
+   * @description Get orders list by period
+   * @author bhtuyen
+   */
+  fastify.get<{ Reply: OrdersDtoDetailRes; Querystring: PeriodParam }>(
     '/',
     {
       schema: {
         response: {
-          200: GetOrdersRes
+          200: ordersDtoDetailRes
         },
-        querystring: GetOrdersQueryParams
+        querystring: periodParam
       }
     },
     async (request, reply) => {
-      const result = await getOrdersController({
+      const data = await getOrdersController({
         fromDate: request.query.fromDate,
         toDate: request.query.toDate
       });
+
       reply.send({
         message: 'Lấy danh sách đơn hàng thành công',
-        data: result as GetOrdersResType['data']
+        data
       });
     }
   );
 
-  fastify.get<{ Reply: GetOrderDetailResType; Params: OrderParamType }>(
-    '/:orderId',
+  /**
+   * @GET /api/orders/:id
+   * @description Get order detail by id
+   * @author bhtuyen
+   */
+  fastify.get<{ Reply: OrderDtoDetailRes; Params: IdParam }>(
+    '/:id',
     {
       schema: {
         response: {
-          200: GetOrderDetailRes
+          200: orderDtoDetailRes
         },
-        params: OrderParam
+        params: idParam
       }
     },
     async (request, reply) => {
-      const result = await getOrderDetailController(request.params.orderId);
+      const data = await getOrderDetailController(request.params.id);
       reply.send({
         message: 'Lấy đơn hàng thành công',
-        data: result as GetOrderDetailResType['data']
+        data
       });
     }
   );
 
-  fastify.put<{ Reply: UpdateOrderResType; Body: UpdateOrderBodyType; Params: OrderParamType }>(
-    '/:orderId',
+  fastify.put<{ Reply: OrderDtoDetailRes; Body: UpdateOrder; Params: IdParam }>(
+    '/:id',
     {
       schema: {
         response: {
-          200: UpdateOrderRes
+          200: orderDtoDetailRes
         },
-        body: UpdateOrderBody,
-        params: OrderParam
+        body: updateOrder,
+        params: idParam
       }
     },
     async (request, reply) => {
-      const result = await updateOrderController(request.params.orderId, {
-        ...request.body,
-        orderHandlerId: request.decodedAccessToken!.userId
-      });
+      const result = await updateOrderController(request.params.id, request.body);
       if (result.socketId) {
         fastify.io.to(result.socketId).to(ManagerRoom).emit('update-order', result.order);
       } else {
@@ -125,19 +137,19 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
       reply.send({
         message: 'Cập nhật đơn hàng thành công',
-        data: result.order as UpdateOrderResType['data']
+        data: result.order
       });
     }
   );
 
-  fastify.post<{ Body: PayGuestOrdersBodyType; Reply: PayGuestOrdersResType }>(
+  fastify.post<{ Body: GuestPayOrders; Reply: OrdersDtoDetailRes }>(
     '/pay',
     {
       schema: {
         response: {
-          200: PayGuestOrdersRes
+          200: ordersDtoDetailRes
         },
-        body: PayGuestOrdersBody
+        body: guestPayOrders
       }
     },
     async (request, reply) => {
@@ -152,7 +164,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
       reply.send({
         message: `Thanh toán thành công ${result.orders.length} đơn`,
-        data: result.orders as PayGuestOrdersResType['data']
+        data: result.orders
       });
     }
   );

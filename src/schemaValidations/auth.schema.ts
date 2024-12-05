@@ -1,60 +1,47 @@
-import { Role } from '@/constants/type';
+import { accountDto } from '@/schemaValidations/account.schema';
+import { buildReply } from '@/schemaValidations/common.schema';
 import z from 'zod';
 
-export const LoginBody = z
+export const token = z
   .object({
-    email: z.string().email(),
-    password: z.string().min(6).max(100)
+    accessToken: z.string(),
+    refreshToken: z.string()
   })
   .strict();
 
-export type LoginBodyType = z.TypeOf<typeof LoginBody>;
+export const login = accountDto
+  .pick({
+    email: true,
+    password: true
+  })
+  .strict();
 
-export const LoginRes = z.object({
-  data: z.object({
-    accessToken: z.string(),
-    refreshToken: z.string(),
-    account: z.object({
-      id: z.string().uuid(),
-      name: z.string(),
-      email: z.string().email(),
-      role: z.enum([Role.Owner, Role.Employee]),
-      avatar: z.string().url().nullable()
+export type Login = z.TypeOf<typeof login>;
+
+export const loginRes = buildReply(
+  z
+    .object({
+      account: accountDto
     })
-  }),
-  message: z.string()
-});
+    .merge(token)
+);
 
-export type LoginResType = z.TypeOf<typeof LoginRes>;
+export type LoginRes = z.TypeOf<typeof loginRes>;
 
-export const RefreshTokenBody = z
-  .object({
-    refreshToken: z.string()
-  })
-  .strict();
+export const refreshToken = token.pick({ refreshToken: true });
 
-export type RefreshTokenBodyType = z.TypeOf<typeof RefreshTokenBody>;
+export type RefreshToken = z.TypeOf<typeof refreshToken>;
 
-export const RefreshTokenRes = z.object({
-  data: z.object({
-    accessToken: z.string(),
-    refreshToken: z.string()
-  }),
-  message: z.string()
-});
+export const refreshTokenRes = buildReply(token);
 
-export type RefreshTokenResType = z.TypeOf<typeof RefreshTokenRes>;
+export type RefreshTokenRes = z.TypeOf<typeof refreshTokenRes>;
 
-export const LogoutBody = z
-  .object({
-    refreshToken: z.string()
-  })
-  .strict();
+export const logout = token.pick({ refreshToken: true });
 
-export type LogoutBodyType = z.TypeOf<typeof LogoutBody>;
+export type Logout = z.TypeOf<typeof logout>;
 
-export const LoginGoogleQuery = z.object({
+export const loginGoogle = z.object({
   code: z.string()
 });
 
-export type LoginGoogleQueryType = z.TypeOf<typeof LoginGoogleQuery>;
+export type LoginGoogle = z.TypeOf<typeof loginGoogle>;

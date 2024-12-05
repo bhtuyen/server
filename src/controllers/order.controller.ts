@@ -1,8 +1,15 @@
-import { DishStatus, OrderStatus, TableStatus } from '@/constants/type';
 import prisma from '@/database';
-import { CreateOrdersBodyType, UpdateOrderBodyType } from '@/schemaValidations/order.schema';
+import { selectOrderDtoDetail, type CreateOrders, type UpdateOrder } from '@/schemaValidations/order.schema';
+import { DishStatus, OrderStatus, TableStatus } from '@prisma/client';
 
-export const createOrdersController = async (orderHandlerId: string, body: CreateOrdersBodyType) => {
+/**
+ * @description Create orders for guest
+ * @param orderHandlerId
+ * @param body
+ * @returns orders list and socketId
+ * @author bhtuyen
+ */
+export const createOrdersController = async (orderHandlerId: string, body: CreateOrders) => {
   const { guestId, orders } = body;
   const guest = await prisma.guest.findUniqueOrThrow({
     where: {
@@ -56,25 +63,17 @@ export const createOrdersController = async (orderHandlerId: string, body: Creat
               quantity: order.quantity,
               tableNumber: guest.tableNumber,
               orderHandlerId,
-              status: OrderStatus.Pending
+              status: OrderStatus.Pending,
+              options: order.options
             },
-            include: {
-              dishSnapshot: true,
-              guest: true,
-              orderHandler: true
-            }
+            select: selectOrderDtoDetail
           });
-          type OrderRecord = typeof orderRecord;
-          return orderRecord as OrderRecord & {
-            status: (typeof OrderStatus)[keyof typeof OrderStatus];
-            dishSnapshot: OrderRecord['dishSnapshot'] & {
-              status: (typeof DishStatus)[keyof typeof DishStatus];
-            };
-          };
+          return orderRecord;
         })
       );
       return ordersRecord;
     }),
+
     prisma.socket.findUnique({
       where: {
         guestId: body.guestId
@@ -87,13 +86,16 @@ export const createOrdersController = async (orderHandlerId: string, body: Creat
   };
 };
 
+/**
+ * @description Get orders
+ * @param fromDate
+ * @param toDate
+ * @returns orders list by period
+ * @author bhtuyen
+ */
 export const getOrdersController = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {
   const orders = await prisma.order.findMany({
-    include: {
-      dishSnapshot: true,
-      orderHandler: true,
-      guest: true
-    },
+    select: selectOrderDtoDetail,
     orderBy: {
       createdAt: 'desc'
     },
@@ -107,7 +109,13 @@ export const getOrdersController = async ({ fromDate, toDate }: { fromDate?: Dat
   return orders;
 };
 
-// Controller thanh toán các hóa đơn dựa trên guestId
+/**
+ * @description Pay orders
+ * @param guestId
+ * @param orderHandlerId
+ * @returns orders list and socketId after paid orders for guest by guestId and orderHandlerId
+ * @author bhtuyen
+ */
 export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId: string; orderHandlerId: string }) => {
   const orders = await prisma.order.findMany({
     where: {
@@ -115,7 +123,8 @@ export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId
       status: {
         in: [OrderStatus.Pending, OrderStatus.Processing, OrderStatus.Delivered]
       }
-    }
+    },
+    select: selectOrderDtoDetail
   });
   if (orders.length === 0) {
     throw new Error('Không có hóa đơn nào cần thanh toán');
@@ -142,11 +151,7 @@ export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId
           in: orders.map((order) => order.id)
         }
       },
-      include: {
-        dishSnapshot: true,
-        orderHandler: true,
-        guest: true
-      },
+      select: selectOrderDtoDetail,
       orderBy: {
         createdAt: 'desc'
       }
@@ -163,25 +168,30 @@ export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId
   };
 };
 
+/**
+ * @description Get order detail
+ * @param orderId
+ * @returns order detail by orderId
+ * @author bhtuyen
+ */
 export const getOrderDetailController = (orderId: string) => {
   return prisma.order.findUniqueOrThrow({
     where: {
       id: orderId
     },
-    include: {
-      dishSnapshot: true,
-      orderHandler: true,
-      guest: true,
-      table: true
-    }
+    select: selectOrderDtoDetail
   });
 };
 
-export const updateOrderController = async (
-  orderId: string,
-  body: UpdateOrderBodyType & { orderHandlerId: string }
-) => {
-  const { status, dishId, quantity, orderHandlerId } = body;
+/**
+ * @description Update order
+ * @param orderId
+ * @param body
+ * @returns order detail and socketId after updated order by orderId and body
+ * @author bhtuyen
+ */
+export const updateOrderController = async (orderId: string, body: UpdateOrder) => {
+  const { status, dishId, quantity, orderHandlerId, options } = body;
   const result = await prisma.$transaction(async (tx) => {
     const order = await prisma.order.findUniqueOrThrow({
       where: {
@@ -221,19 +231,16 @@ export const updateOrderController = async (
         status,
         dishSnapshotId,
         quantity,
-        orderHandlerId
+        orderHandlerId,
+        options
       },
-      include: {
-        dishSnapshot: true,
-        orderHandler: true,
-        guest: true
-      }
+      select: selectOrderDtoDetail
     });
     return newOrder;
   });
   const socketRecord = await prisma.socket.findUnique({
     where: {
-      guestId: result.guestId!
+      guestId: result.guest.id
     }
   });
   return {

@@ -1,8 +1,9 @@
-import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import fastifyMultipart from '@fastify/multipart';
 import { uploadImage } from '@/controllers/media.controller';
-import { UploadImageRes, UploadImageResType } from '@/schemaValidations/media.schema';
+import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
+import type { UploadImageRes } from '@/schemaValidations/media.schema';
+import { uploadImageRes } from '@/schemaValidations/media.schema';
+import fastifyMultipart from '@fastify/multipart';
+import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function mediaRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
   fastify.register(fastifyMultipart);
@@ -14,13 +15,13 @@ export default async function mediaRoutes(fastify: FastifyInstance, options: Fas
   );
 
   fastify.post<{
-    Reply: UploadImageResType;
+    Reply: UploadImageRes;
   }>(
     '/upload',
     {
       schema: {
         response: {
-          200: UploadImageRes
+          200: uploadImageRes
         }
       }
     },

@@ -1,18 +1,19 @@
 import envConfig from '@/config';
 import { PrismaErrorCode } from '@/constants/error-reference';
-import { Role, TableStatus } from '@/constants/type';
 import prisma from '@/database';
 import {
-  ChangePasswordBodyType,
-  CreateEmployeeAccountBodyType,
-  CreateGuestBodyType,
-  UpdateEmployeeAccountBodyType,
-  UpdateMeBodyType
+  selectAccountDto,
+  type ChangePassword,
+  type CreateEmployee,
+  type CreateGuestBodyType,
+  type UpdateEmployee,
+  type UpdateMe
 } from '@/schemaValidations/account.schema';
 import { comparePassword, hashPassword } from '@/utils/crypto';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
 import { getChalk } from '@/utils/helpers';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
+import { Role, TableStatus } from '@prisma/client';
 
 export const initOwnerAccount = async () => {
   const accountCount = await prisma.account.count();
@@ -36,7 +37,7 @@ export const initOwnerAccount = async () => {
   }
 };
 
-export const createEmployeeAccount = async (body: CreateEmployeeAccountBodyType) => {
+export const createEmployeeAccount = async (body: CreateEmployee) => {
   try {
     const hashedPassword = await hashPassword(body.password);
     const account = await prisma.account.create({
@@ -85,12 +86,13 @@ export const getAccountList = async () => {
   const account = await prisma.account.findMany({
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    select: selectAccountDto
   });
   return account;
 };
 
-export const updateEmployeeAccount = async (accountId: string, body: UpdateEmployeeAccountBodyType) => {
+export const updateEmployeeAccount = async (accountId: string, body: UpdateEmployee) => {
   try {
     const [socketRecord, oldAccount] = await Promise.all([
       prisma.socket.findUnique({
@@ -182,7 +184,7 @@ export const getMeController = async (accountId: string) => {
   return account;
 };
 
-export const updateMeController = async (accountId: string, body: UpdateMeBodyType) => {
+export const updateMeController = async (accountId: string, body: UpdateMe) => {
   const account = prisma.account.update({
     where: {
       id: accountId
@@ -192,7 +194,7 @@ export const updateMeController = async (accountId: string, body: UpdateMeBodyTy
   return account;
 };
 
-export const changePasswordController = async (accountId: string, body: ChangePasswordBodyType) => {
+export const changePasswordController = async (accountId: string, body: ChangePassword) => {
   const account = await prisma.account.findUniqueOrThrow({
     where: {
       id: accountId
@@ -214,7 +216,7 @@ export const changePasswordController = async (accountId: string, body: ChangePa
   return newAccount;
 };
 
-export const changePasswordV2Controller = async (accountId: string, body: ChangePasswordBodyType) => {
+export const changePasswordV2Controller = async (accountId: string, body: ChangePassword) => {
   const account = await changePasswordController(accountId, body);
   await prisma.refreshToken.deleteMany({
     where: {

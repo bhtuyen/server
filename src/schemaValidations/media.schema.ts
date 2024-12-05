@@ -1,8 +1,6 @@
+import { buildReply } from '@/schemaValidations/common.schema';
 import z from 'zod';
 
-export const UploadImageRes = z.object({
-  data: z.string(),
-  message: z.string()
-});
+export const uploadImageRes = buildReply(z.string().url());
 
-export type UploadImageResType = z.TypeOf<typeof UploadImageRes>;
+export type UploadImageRes = z.TypeOf<typeof uploadImageRes>;

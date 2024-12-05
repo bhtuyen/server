@@ -1,10 +1,10 @@
 import { dashboardIndicatorController } from '@/controllers/indicator.controller';
 import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import {
-  DashboardIndicatorQueryParams,
-  DashboardIndicatorQueryParamsType,
+  DashboardIndicatorQuery,
+  dashboardIndicatorQuerySchema,
   DashboardIndicatorRes,
-  DashboardIndicatorResType
+  dashboardIndicatorResSchema
 } from '@/schemaValidations/indicator.schema';
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
@@ -15,14 +15,14 @@ export default async function indicatorRoutes(fastify: FastifyInstance, options:
       relation: 'and'
     })
   );
-  fastify.get<{ Reply: DashboardIndicatorResType; Querystring: DashboardIndicatorQueryParamsType }>(
+  fastify.get<{ Reply: DashboardIndicatorRes; Querystring: DashboardIndicatorQuery }>(
     '/dashboard',
     {
       schema: {
         response: {
-          200: DashboardIndicatorRes
+          200: dashboardIndicatorResSchema
         },
-        querystring: DashboardIndicatorQueryParams
+        querystring: dashboardIndicatorQuerySchema
       }
     },
     async (request, reply) => {
@@ -30,7 +30,7 @@ export default async function indicatorRoutes(fastify: FastifyInstance, options:
       const result = await dashboardIndicatorController(queryString);
       reply.send({
         message: 'Lấy các chỉ số thành công',
-        data: result as DashboardIndicatorResType['data']
+        data: result
       });
     }
   );

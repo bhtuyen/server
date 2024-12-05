@@ -8,13 +8,13 @@ Table Account {
   email String [unique, not null]
   password String [not null]
   avatar String
-  role String [not null, default: 'Employee']
+  role Role [not null, default: 'Employee']
   phone String [not null]
   orders Order [not null]
   employees Account [not null]
   owner Account
   ownerId String
-  isVerified Boolean [default: false]
+  isVerified Boolean [not null, default: false]
   refreshToken RefreshToken [not null]
   sockets Socket [not null]
   createdAt DateTime [default: `now()`, not null]
@@ -46,8 +46,8 @@ Table DishSnapshot {
   status DishStatus [not null, default: 'Available']
   category DishCategory [not null, default: 'Paid']
   options String
-  dishId String
-  dish Dish
+  dishId String [not null]
+  dish Dish [not null]
   updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
   order Order
@@ -58,11 +58,10 @@ Table DishSnapshot {
 Table DishGroup {
   id String [pk]
   name String [unique, not null]
-  code String [unique, not null]
   dishes Dish [not null]
-  disheSnapshots DishSnapshot [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  DishSnapshot DishSnapshot [not null]
 }
 
 Table Table {
@@ -70,7 +69,7 @@ Table Table {
   capacity Int [not null]
   orders Order [not null]
   guests Guest [not null]
-  status String [not null, default: 'Available']
+  status TableStatus [not null, default: 'Available']
   token String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
@@ -78,17 +77,17 @@ Table Table {
 
 Table Order {
   id String [pk]
-  guestId String
-  guest Guest
-  table Table
-  tableNumber String
+  guestId String [not null]
+  guest Guest [not null]
+  table Table [not null]
+  tableNumber String [not null]
   dishSnapshot DishSnapshot [not null]
   dishSnapshotId String [unique, not null]
   options String
   quantity Int [not null]
   orderHandler Account
   orderHandlerId String
-  status String [not null, default: 'Pending']
+  status OrderStatus [not null, default: 'Pending']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
 }
@@ -103,9 +102,8 @@ Table RefreshToken {
 
 Table Guest {
   id String [pk]
-  name String [not null]
-  table Table
-  tableNumber String
+  table Table [not null]
+  tableNumber String [not null]
   orders Order [not null]
   refreshToken String
   refreshTokenExpiresAt DateTime
@@ -133,17 +131,37 @@ Enum DishCategory {
   Paid
 }
 
+Enum Role {
+  Owner
+  Employee
+  Guest
+}
+
+Enum TableStatus {
+  Available
+  Hidden
+  Reserved
+}
+
+Enum OrderStatus {
+  Pending
+  Processing
+  Rejected
+  Delivered
+  Paid
+}
+
 Ref: Account.ownerId > Account.id
 
 Ref: Dish.groupId > DishGroup.id
 
-Ref: DishSnapshot.dishId > Dish.id [delete: Set Null]
+Ref: DishSnapshot.dishId > Dish.id [delete: No Action]
 
 Ref: DishSnapshot.groupId > DishGroup.id
 
-Ref: Order.guestId > Guest.id [delete: Set Null]
+Ref: Order.guestId > Guest.id [delete: No Action]
 
-Ref: Order.tableNumber > Table.number [delete: Set Null]
+Ref: Order.tableNumber > Table.number [delete: No Action]
 
 Ref: Order.dishSnapshotId - DishSnapshot.id [delete: Cascade]
 
@@ -151,7 +169,7 @@ Ref: Order.orderHandlerId > Account.id [delete: Set Null]
 
 Ref: RefreshToken.accountId > Account.id [delete: Cascade]
 
-Ref: Guest.tableNumber > Table.number [delete: Set Null]
+Ref: Guest.tableNumber > Table.number [delete: No Action]
 
 Ref: Socket.accountId > Account.id [delete: Set Null]
 

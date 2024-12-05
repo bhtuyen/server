@@ -1,9 +1,9 @@
 import { ManagerRoom } from '@/constants/const';
-import { Role } from '@/constants/type';
 import prisma from '@/database';
 import { AuthError } from '@/utils/errors';
 import { getChalk } from '@/utils/helpers';
 import { verifyAccessToken } from '@/utils/jwt';
+import { Role } from '@prisma/client';
 import fastifyPlugin from 'fastify-plugin';
 
 export const socketPlugin = fastifyPlugin(async (fastify) => {

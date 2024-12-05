@@ -1,4 +1,3 @@
-import { Role } from '@/constants/type';
 import {
   changePasswordController,
   changePasswordV2Controller,
@@ -13,44 +12,44 @@ import {
   updateMeController
 } from '@/controllers/account.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import {
+import type {
   AccountIdParam,
-  AccountIdParamType,
-  AccountListRes,
-  AccountListResType,
   AccountRes,
-  AccountResType,
-  ChangePasswordBody,
-  ChangePasswordBodyType,
-  ChangePasswordV2Body,
-  ChangePasswordV2BodyType,
-  ChangePasswordV2Res,
-  ChangePasswordV2ResType,
-  CreateEmployeeAccountBody,
-  CreateEmployeeAccountBodyType,
-  CreateGuestBody,
+  AccountsRes,
+  ChangePassword,
+  CreateEmployee,
   CreateGuestBodyType,
-  CreateGuestRes,
   CreateGuestResType,
-  GetGuestListQueryParams,
   GetGuestListQueryParamsType,
-  GetListGuestsRes,
   GetListGuestsResType,
-  UpdateEmployeeAccountBody,
-  UpdateEmployeeAccountBodyType,
-  UpdateMeBody,
-  UpdateMeBodyType
+  UpdateEmployee,
+  UpdateMe
 } from '@/schemaValidations/account.schema';
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import {
+  accountIdParamSchema,
+  accountRes,
+  accountsRes,
+  changePasswordSchema,
+  createEmployee,
+  CreateGuestBody,
+  CreateGuestRes,
+  GetGuestListQueryParams,
+  GetListGuestsRes,
+  updateEmployee,
+  updateMeSchema
+} from '@/schemaValidations/account.schema';
+import { loginRes } from '@/schemaValidations/auth.schema';
+import { Role } from '@prisma/client';
+import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function accountRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
   fastify.addHook('preValidation', fastify.auth([requireLoginedHook]));
-  fastify.get<{ Reply: AccountListResType }>(
+  fastify.get<{ Reply: AccountsRes }>(
     '/',
     {
       schema: {
         response: {
-          200: AccountListRes
+          200: accountsRes
         }
       },
       preValidation: fastify.auth([requireOwnerHook])
@@ -58,41 +57,41 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const accounts = await getAccountList();
       reply.send({
-        data: accounts as AccountListResType['data'],
+        data: accounts,
         message: 'Lấy danh sách nhân viên thành công'
       });
     }
   );
   fastify.post<{
-    Body: CreateEmployeeAccountBodyType;
-    Reply: AccountResType;
+    Body: CreateEmployee;
+    Reply: AccountRes;
   }>(
     '/',
     {
       schema: {
         response: {
-          200: AccountRes
+          200: accountRes
         },
-        body: CreateEmployeeAccountBody
+        body: createEmployee
       },
       preValidation: fastify.auth([requireOwnerHook, pauseApiHook])
     },
     async (request, reply) => {
       const account = await createEmployeeAccount(request.body);
       reply.send({
-        data: account as AccountResType['data'],
+        data: account as AccountRes['data'],
         message: 'Tạo tài khoản thành công'
       });
     }
   );
-  fastify.get<{ Reply: AccountResType; Params: AccountIdParamType }>(
+  fastify.get<{ Reply: AccountRes; Params: AccountIdParam }>(
     '/detail/:id',
     {
       schema: {
         response: {
-          200: AccountRes
+          200: accountRes
         },
-        params: AccountIdParam
+        params: accountIdParamSchema
       },
       preValidation: fastify.auth([requireOwnerHook])
     },
@@ -100,21 +99,21 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       const accountId = request.params.id;
       const account = await getEmployeeAccount(accountId);
       reply.send({
-        data: account as AccountResType['data'],
+        data: account as AccountRes['data'],
         message: 'Lấy thông tin nhân viên thành công'
       });
     }
   );
 
-  fastify.put<{ Reply: AccountResType; Params: AccountIdParamType; Body: UpdateEmployeeAccountBodyType }>(
+  fastify.put<{ Reply: AccountRes; Params: AccountIdParam; Body: UpdateEmployee }>(
     '/detail/:id',
     {
       schema: {
         response: {
-          200: AccountRes
+          200: accountRes
         },
-        params: AccountIdParam,
-        body: UpdateEmployeeAccountBody
+        params: accountIdParamSchema,
+        body: updateEmployee
       },
       preValidation: fastify.auth([requireOwnerHook, pauseApiHook])
     },
@@ -126,20 +125,20 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
         fastify.io.to(socketId).emit('refresh-token', account);
       }
       reply.send({
-        data: account as AccountResType['data'],
+        data: account as AccountRes['data'],
         message: 'Cập nhật thành công'
       });
     }
   );
 
-  fastify.delete<{ Reply: AccountResType; Params: AccountIdParamType }>(
+  fastify.delete<{ Reply: AccountRes; Params: AccountIdParam }>(
     '/detail/:id',
     {
       schema: {
         response: {
-          200: AccountRes
+          200: accountRes
         },
-        params: AccountIdParam
+        params: accountIdParamSchema
       },
       preValidation: fastify.auth([requireOwnerHook, pauseApiHook])
     },
@@ -150,94 +149,94 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
         fastify.io.to(socketId).emit('logout', account);
       }
       reply.send({
-        data: account as AccountResType['data'],
+        data: account as AccountRes['data'],
         message: 'Xóa thành công'
       });
     }
   );
 
-  fastify.get<{ Reply: AccountResType }>(
+  fastify.get<{ Reply: AccountRes }>(
     '/me',
     {
       schema: {
         response: {
-          200: AccountRes
+          200: accountRes
         }
       }
     },
     async (request, reply) => {
       const account = await getMeController(request.decodedAccessToken!.userId);
       reply.send({
-        data: account as AccountResType['data'],
+        data: account as AccountRes['data'],
         message: 'Lấy thông tin thành công'
       });
     }
   );
 
   fastify.put<{
-    Reply: AccountResType;
-    Body: UpdateMeBodyType;
+    Reply: AccountRes;
+    Body: UpdateMe;
   }>(
     '/me',
     {
       schema: {
         response: {
-          200: AccountRes
+          200: accountRes
         },
-        body: UpdateMeBody
+        body: updateMeSchema
       },
       preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
       const result = await updateMeController(request.decodedAccessToken!.userId, request.body);
       reply.send({
-        data: result as AccountResType['data'],
+        data: result as AccountRes['data'],
         message: 'Cập nhật thông tin thành công'
       });
     }
   );
 
   fastify.put<{
-    Reply: AccountResType;
-    Body: ChangePasswordBodyType;
+    Reply: AccountRes;
+    Body: ChangePassword;
   }>(
     '/change-password',
     {
       schema: {
         response: {
-          200: AccountRes
+          200: accountRes
         },
-        body: ChangePasswordBody
+        body: changePasswordSchema
       },
       preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
       const result = await changePasswordController(request.decodedAccessToken!.userId, request.body);
       reply.send({
-        data: result as AccountResType['data'],
+        data: result as AccountRes['data'],
         message: 'Đổi mật khẩu thành công'
       });
     }
   );
 
   fastify.put<{
-    Reply: ChangePasswordV2ResType;
-    Body: ChangePasswordV2BodyType;
+    Reply: ChangePassword;
+    Body: ChangePassword;
   }>(
     '/change-password-v2',
     {
       schema: {
         response: {
-          200: ChangePasswordV2Res
+          200: loginRes
         },
-        body: ChangePasswordV2Body
+        body: changePasswordSchema
       },
       preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
       const result = await changePasswordV2Controller(request.decodedAccessToken!.userId, request.body);
       reply.send({
-        data: result as ChangePasswordV2ResType['data'],
+        data: result,
         message: 'Đổi mật khẩu thành công'
       });
     }
@@ -260,10 +259,14 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       const result = await createGuestController(request.body);
       reply.send({
         message: 'Tạo tài khoản khách thành công',
-        data: { ...result, role: Role.Guest } as CreateGuestResType['data']
+        data: { ...result, role: Role.Guest }
       });
     }
   );
+
+  /**
+   *
+   */
   fastify.get<{ Reply: GetListGuestsResType; Querystring: GetGuestListQueryParamsType }>(
     '/guests',
     {
@@ -284,7 +287,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       });
       reply.send({
         message: 'Lấy danh sách khách thành công',
-        data: result as GetListGuestsResType['data']
+        data: result
       });
     }
   );

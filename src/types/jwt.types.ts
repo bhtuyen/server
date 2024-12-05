@@ -1,4 +1,5 @@
-import { Role, Token } from '@/constants/type';
+import type { Token } from '@/constants/enum';
+import type { Role } from '@prisma/client';
 
 export interface TokenPayload {
   userId: string;

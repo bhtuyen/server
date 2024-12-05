@@ -1,50 +1,48 @@
 import { createTable, deleteTable, getTableDetail, getTableList, updateTable } from '@/controllers/table.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import {
-  CreateTableBody,
-  CreateTableBodyType,
-  TableListRes,
-  TableListResType,
-  TableParams,
-  TableParamsType,
-  TableRes,
+  CreateTable,
+  tableParam,
+  TableParam,
+  tableRes,
   TableResType,
-  UpdateTableBody,
-  UpdateTableBodyType
+  TablesRes,
+  tablesRes,
+  UpdateTable
 } from '@/schemaValidations/table.schema';
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function tablesRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
   fastify.get<{
-    Reply: TableListResType;
+    Reply: TablesRes;
   }>(
     '/',
     {
       schema: {
         response: {
-          200: TableListRes
+          200: tablesRes
         }
       }
     },
     async (request, reply) => {
       const Tables = await getTableList();
       reply.send({
-        data: Tables as TableListResType['data'],
+        data: Tables as TablesRes['data'],
         message: 'Lấy danh sách bàn thành công!'
       });
     }
   );
 
   fastify.get<{
-    Params: TableParamsType;
+    Params: TableParam;
     Reply: TableResType;
   }>(
     '/:number',
     {
       schema: {
-        params: TableParams,
+        params: tableParam,
         response: {
-          200: TableRes
+          200: tableRes
         }
       }
     },
@@ -58,15 +56,15 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
   );
 
   fastify.post<{
-    Body: CreateTableBodyType;
+    Body: CreateTable;
     Reply: TableResType;
   }>(
     '',
     {
       schema: {
-        body: CreateTableBody,
+        body: createTable,
         response: {
-          200: TableRes
+          200: tableRes
         }
       },
       preValidation: fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
@@ -83,17 +81,17 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
   );
 
   fastify.put<{
-    Params: TableParamsType;
-    Body: UpdateTableBodyType;
+    Params: TableParam;
+    Body: UpdateTable;
     Reply: TableResType;
   }>(
     '/:number',
     {
       schema: {
-        params: TableParams,
-        body: UpdateTableBody,
+        params: tableParam,
+        body: updateTable,
         response: {
-          200: TableRes
+          200: tableRes
         }
       },
       preValidation: fastify.auth([pauseApiHook, requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
@@ -110,15 +108,15 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
   );
 
   fastify.delete<{
-    Params: TableParamsType;
+    Params: TableParam;
     Reply: TableResType;
   }>(
     '/:number',
     {
       schema: {
-        params: TableParams,
+        params: tableParam,
         response: {
-          200: TableRes
+          200: tableRes
         }
       },
       preValidation: fastify.auth([pauseApiHook, requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {

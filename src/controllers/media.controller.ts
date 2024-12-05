@@ -1,12 +1,10 @@
-import { randomId } from '@/utils/helpers';
-import { MultipartFile } from '@fastify/multipart';
-import path from 'path';
-import fs from 'fs';
-import util from 'util';
-import { pipeline } from 'stream';
 import envConfig, { API_URL } from '@/config';
-import { Storage } from '@google-cloud/storage';
-import sharp from 'sharp';
+import { randomId } from '@/utils/helpers';
+import type { MultipartFile } from '@fastify/multipart';
+import fs from 'fs';
+import path from 'path';
+import { pipeline } from 'stream';
+import util from 'util';
 const pump = util.promisify(pipeline);
 
 export const uploadImage = async (data: MultipartFile) => {

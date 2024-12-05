@@ -1,12 +1,13 @@
 import envConfig from '@/config';
-import { Role } from '@/constants/type';
 import prisma from '@/database';
-import { LoginBodyType } from '@/schemaValidations/auth.schema';
-import { TokenPayload } from '@/types/jwt.types';
+import { selectAccountDto } from '@/schemaValidations/account.schema';
+import type { Login } from '@/schemaValidations/auth.schema';
+import type { OauthGoogleProfile, OauthGoogleToken } from '@/types/google.types';
+import type { TokenPayload } from '@/types/jwt.types';
 import { comparePassword } from '@/utils/crypto';
 import { AuthError, EntityError, StatusError } from '@/utils/errors';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
-import axios from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 
 export const logoutController = async (refreshToken: string) => {
   await prisma.refreshToken.delete({
@@ -17,11 +18,12 @@ export const logoutController = async (refreshToken: string) => {
   return 'Đăng xuất thành công';
 };
 
-export const loginController = async (body: LoginBodyType) => {
+export const loginController = async (body: Login) => {
   const account = await prisma.account.findUnique({
     where: {
       email: body.email
-    }
+    },
+    select: selectAccountDto
   });
   if (!account) {
     throw new EntityError([{ field: 'email', message: 'Email không tồn tại' }]);
@@ -32,11 +34,11 @@ export const loginController = async (body: LoginBodyType) => {
   }
   const accessToken = signAccessToken({
     userId: account.id,
-    role: account.role as Role
+    role: account.role
   });
   const refreshToken = signRefreshToken({
     userId: account.id,
-    role: account.role as Role
+    role: account.role
   });
   const decodedRefreshToken = verifyRefreshToken(refreshToken);
   const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
@@ -73,11 +75,11 @@ export const refreshTokenController = async (refreshToken: string) => {
   const account = refreshTokenDoc.account;
   const newAccessToken = signAccessToken({
     userId: account.id,
-    role: account.role as Role
+    role: account.role
   });
   const newRefreshToken = signRefreshToken({
     userId: account.id,
-    role: account.role as Role,
+    role: account.role,
     exp: decodedRefreshToken.exp
   });
   await prisma.refreshToken.delete({
@@ -103,7 +105,7 @@ export const refreshTokenController = async (refreshToken: string) => {
  * @param {string} code - Authorization code được gửi từ client-side.
  * @returns {Object} - Đối tượng chứa Google OAuth token.
  */
-const getOauthGooleToken = async (code: string) => {
+const getOauthGooleToken = async (code: string): Promise<OauthGoogleToken> => {
   const body = {
     code,
     client_id: envConfig.GOOGLE_CLIENT_ID,
@@ -111,19 +113,12 @@ const getOauthGooleToken = async (code: string) => {
     redirect_uri: envConfig.GOOGLE_AUTHORIZED_REDIRECT_URI,
     grant_type: 'authorization_code'
   };
-  const { data } = await axios.post('https://oauth2.googleapis.com/token', body, {
+  const { data } = await axios.post<OauthGoogleToken>('https://oauth2.googleapis.com/token', body, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
   });
-  return data as {
-    access_token: string;
-    expires_in: number;
-    refresh_token: string;
-    scope: string;
-    token_type: string;
-    id_token: string;
-  };
+  return data;
 };
 
 /**
@@ -133,8 +128,14 @@ const getOauthGooleToken = async (code: string) => {
  * @param {string} tokens.access_token - Access token được lấy từ Google OAuth.
  * @returns {Object} - Đối tượng chứa thông tin người dùng từ Google.
  */
-const getGoogleUser = async ({ id_token, access_token }: { id_token: string; access_token: string }) => {
-  const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+const getGoogleUser = async ({
+  id_token,
+  access_token
+}: {
+  id_token: string;
+  access_token: string;
+}): Promise<OauthGoogleProfile> => {
+  const { data } = await axios.get<OauthGoogleProfile>('https://www.googleapis.com/oauth2/v1/userinfo', {
     params: {
       access_token,
       alt: 'json'
@@ -143,15 +144,7 @@ const getGoogleUser = async ({ id_token, access_token }: { id_token: string; acc
       Authorization: `Bearer ${id_token}`
     }
   });
-  return data as {
-    id: string;
-    email: string;
-    verified_email: boolean;
-    name: string;
-    given_name: string;
-    family_name: string;
-    picture: string;
-  };
+  return data;
 };
 
 export const loginGoogleController = async (code: string) => {
@@ -161,28 +154,29 @@ export const loginGoogleController = async (code: string) => {
   // Kiểm tra email đã được xác minh từ Google
   if (!googleUser.verified_email) {
     throw new StatusError({
-      status: 403,
+      status: HttpStatusCode.Forbidden,
       message: 'Email chưa được xác minh từ Google'
     });
   }
   const account = await prisma.account.findUnique({
     where: {
       email: googleUser.email
-    }
+    },
+    select: selectAccountDto
   });
   if (!account) {
     throw new StatusError({
-      status: 403,
+      status: HttpStatusCode.NotFound,
       message: 'Tài khoản này không tồn tại trên hệ thống website'
     });
   }
   const accessToken = signAccessToken({
     userId: account.id,
-    role: account.role as Role
+    role: account.role
   });
   const refreshToken = signRefreshToken({
     userId: account.id,
-    role: account.role as Role
+    role: account.role
   });
 
   const decodedRefreshToken = verifyRefreshToken(refreshToken);
@@ -199,11 +193,6 @@ export const loginGoogleController = async (code: string) => {
   return {
     accessToken,
     refreshToken,
-    account: {
-      id: account.id,
-      name: account.name,
-      email: account.email,
-      role: account.role
-    }
+    account
   };
 };

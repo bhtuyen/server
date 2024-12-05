@@ -1,129 +1,93 @@
-import { DishStatus, DishCategory, OrderStatus } from '@/constants/type';
-import { AccountSchema } from '@/schemaValidations/account.schema';
-import { TableSchema } from '@/schemaValidations/table.schema';
+import { accountDto } from '@/schemaValidations/account.schema';
+import { buildReply, id, updateAndCreate } from '@/schemaValidations/common.schema';
+import { dishSnapshotDto } from '@/schemaValidations/dishSnapshot.schema';
+import { guestDto } from '@/schemaValidations/guest.schema';
+import { tableDto } from '@/schemaValidations/table.schema';
+import { buildSelect } from '@/utils/helpers';
+import { OrderStatus } from '@prisma/client';
 import z from 'zod';
 
-const DishSnapshotSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  price: z.number().positive(),
-  image: z.string().url(),
-  description: z.string(),
-  category: z.enum([DishCategory.Buffet, DishCategory.Paid]),
-  options: z.string(),
-  groupId: z.string().uuid(),
-  status: z.enum([DishStatus.Available, DishStatus.Unavailable, DishStatus.Hidden]),
-  dishId: z.string().uuid().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date()
-});
-export const OrderSchema = z.object({
-  id: z.string().uuid(),
-  guestId: z.string().uuid().nullable(),
-  guest: z
-    .object({
-      id: z.string().uuid(),
-      name: z.string(),
-      tableNumber: z.string().nullable(),
-      createdAt: z.date(),
-      updatedAt: z.date()
-    })
-    .nullable(),
-  tableNumber: z.string().nullable(),
-  dishSnapshotId: z.string().uuid(),
-  dishSnapshot: DishSnapshotSchema,
-  options: z.string().nullable(),
-  quantity: z.number(),
-  orderHandlerId: z.string().uuid().nullable(),
-  orderHandler: AccountSchema.nullable(),
-  status: z.enum([
-    OrderStatus.Processing,
-    OrderStatus.Delivered,
-    OrderStatus.Paid,
-    OrderStatus.Rejected,
-    OrderStatus.Pending
-  ]),
-  createdAt: z.date(),
-  updatedAt: z.date()
-});
-
-export const UpdateOrderBody = z.object({
-  status: z.enum([
-    OrderStatus.Processing,
-    OrderStatus.Delivered,
-    OrderStatus.Paid,
-    OrderStatus.Rejected,
-    OrderStatus.Pending
-  ]),
-  dishId: z.string().uuid(),
-  quantity: z.number()
-});
-
-export type UpdateOrderBodyType = z.TypeOf<typeof UpdateOrderBody>;
-
-export const OrderParam = z.object({
-  orderId: z.string().uuid()
-});
-
-export type OrderParamType = z.TypeOf<typeof OrderParam>;
-
-export const UpdateOrderRes = z.object({
-  message: z.string(),
-  data: OrderSchema
-});
-
-export type UpdateOrderResType = z.TypeOf<typeof UpdateOrderRes>;
-
-export const GetOrdersQueryParams = z.object({
-  fromDate: z.coerce.date().optional(),
-  toDate: z.coerce.date().optional()
-});
-
-export type GetOrdersQueryParamsType = z.TypeOf<typeof GetOrdersQueryParams>;
-
-export const GetOrdersRes = z.object({
-  message: z.string(),
-  data: z.array(OrderSchema)
-});
-
-export type GetOrdersResType = z.TypeOf<typeof GetOrdersRes>;
-
-export const GetOrderDetailRes = z.object({
-  message: z.string(),
-  data: OrderSchema.extend({
-    table: TableSchema
+export const order = z
+  .object({
+    guestId: z.string().uuid(),
+    tableNumber: z.string().trim().min(1).max(50),
+    dishSnapshotId: z.string().uuid(),
+    options: z.string().nullable().default(null),
+    quantity: z.number().min(1).max(20),
+    orderHandlerId: z.string().uuid().nullable(),
+    status: z.nativeEnum(OrderStatus)
   })
+  .merge(updateAndCreate)
+  .merge(id);
+
+export const orderDto = order.omit({
+  createdAt: true,
+  updatedAt: true
 });
 
-export type GetOrderDetailResType = z.TypeOf<typeof GetOrderDetailRes>;
+export type OrderDto = z.TypeOf<typeof orderDto>;
 
-export const PayGuestOrdersBody = z.object({
+export const orderDtoDetail = orderDto
+  .extend({
+    guest: guestDto,
+    table: tableDto,
+    orderHandler: accountDto.nullable(),
+    dishSnapshot: dishSnapshotDto
+  })
+  .omit({
+    guestId: true,
+    tableNumber: true,
+    orderHandlerId: true,
+    dishSnapshotId: true
+  });
+
+export type OrderDtoDetail = z.TypeOf<typeof orderDtoDetail>;
+
+export const updateOrder = orderDto
+  .pick({
+    status: true,
+    quantity: true,
+    options: true,
+    orderHandlerId: true
+  })
+  .merge(
+    z.object({
+      dishId: z.string().uuid()
+    })
+  )
+  .strict();
+
+export type UpdateOrder = z.TypeOf<typeof updateOrder>;
+
+export const orderDtoDetailRes = buildReply(orderDtoDetail);
+
+export type OrderDtoDetailRes = z.TypeOf<typeof orderDtoDetailRes>;
+
+export const selectOrderDtoDetail = buildSelect<OrderDtoDetail>();
+
+export const selectOrderDto = buildSelect<OrderDto>();
+
+export const ordersDtoDetailRes = buildReply(z.array(orderDtoDetail));
+
+export type OrdersDtoDetailRes = z.TypeOf<typeof ordersDtoDetailRes>;
+
+export const guestPayOrders = z.object({
   guestId: z.string().uuid()
 });
 
-export type PayGuestOrdersBodyType = z.TypeOf<typeof PayGuestOrdersBody>;
+export type GuestPayOrders = z.TypeOf<typeof guestPayOrders>;
 
-export const PayGuestOrdersRes = GetOrdersRes;
-
-export type PayGuestOrdersResType = z.TypeOf<typeof PayGuestOrdersRes>;
-
-export const CreateOrdersBody = z
+export const createOrders = z
   .object({
     guestId: z.string().uuid(),
     orders: z.array(
       z.object({
         dishId: z.string().uuid(),
-        quantity: z.number()
+        quantity: z.number(),
+        options: z.string().nullable().default(null)
       })
     )
   })
   .strict();
 
-export type CreateOrdersBodyType = z.TypeOf<typeof CreateOrdersBody>;
-
-export const CreateOrdersRes = z.object({
-  message: z.string(),
-  data: z.array(OrderSchema)
-});
-
-export type CreateOrdersResType = z.TypeOf<typeof CreateOrdersRes>;
+export type CreateOrders = z.TypeOf<typeof createOrders>;

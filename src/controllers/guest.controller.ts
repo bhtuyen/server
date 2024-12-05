@@ -1,13 +1,13 @@
 import envConfig from '@/config';
-import { DishStatus, OrderStatus, Role, TableStatus } from '@/constants/type';
 import prisma from '@/database';
-import { GuestCreateOrdersBodyType, GuestLoginBodyType } from '@/schemaValidations/guest.schema';
-import { TokenPayload } from '@/types/jwt.types';
+import type { GuestCreateOrder, GuestLogin } from '@/schemaValidations/guest.schema';
+import type { TokenPayload } from '@/types/jwt.types';
 import { AuthError } from '@/utils/errors';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
+import { DishStatus, OrderStatus, Role, TableStatus } from '@prisma/client';
 import ms from 'ms';
 
-export const guestLoginController = async (body: GuestLoginBodyType) => {
+export const guestLoginController = async (body: GuestLogin) => {
   const table = await prisma.table.findUnique({
     where: {
       number: body.tableNumber,
@@ -28,7 +28,6 @@ export const guestLoginController = async (body: GuestLoginBodyType) => {
 
   let guest = await prisma.guest.create({
     data: {
-      name: body.name,
       tableNumber: body.tableNumber
     }
   });
@@ -120,7 +119,7 @@ export const guestRefreshTokenController = async (refreshToken: string) => {
   };
 };
 
-export const guestCreateOrdersController = async (guestId: string, body: GuestCreateOrdersBodyType) => {
+export const guestCreateOrdersController = async (guestId: string, body: GuestCreateOrder) => {
   const result = await prisma.$transaction(async (tx) => {
     const guest = await tx.guest.findUniqueOrThrow({
       where: {

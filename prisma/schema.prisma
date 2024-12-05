@@ -20,13 +20,13 @@ model Account {
   email        String         @unique @db.VarChar(255)
   password     String         @db.VarChar(255)
   avatar       String?        @db.VarChar(255)
-  role         String         @default("Employee") @db.VarChar(50)
+  role         Role           @default(Employee)
   phone        String         @db.VarChar(50)
   orders       Order[]
   employees    Account[]      @relation("OwnerEmployee")
   owner        Account?       @relation("OwnerEmployee", fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   ownerId      String?        @db.Char(36)
-  isVerified   Boolean?       @default(false)
+  isVerified   Boolean        @default(false)
   refreshToken RefreshToken[]
   sockets      Socket[]
   createdAt    DateTime       @default(now())
@@ -58,8 +58,8 @@ model DishSnapshot {
   status      DishStatus   @default(Available)
   category    DishCategory @default(Paid)
   options     String?      @db.Text
-  dishId      String?      @db.Char(36)
-  dish        Dish?        @relation(fields: [dishId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  dishId      String       @db.Char(36)
+  dish        Dish         @relation(fields: [dishId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   updatedAt   DateTime     @updatedAt
   createdAt   DateTime     @default(now())
   order       Order?
@@ -68,39 +68,38 @@ model DishSnapshot {
 }
 
 model DishGroup {
-  id             String         @id @default(uuid()) @db.Char(36)
-  name           String         @unique @db.VarChar(255)
-  code           String         @unique @db.VarChar(50)
-  dishes         Dish[]
-  disheSnapshots DishSnapshot[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id           String         @id @default(uuid()) @db.Char(36)
+  name         String         @unique @db.VarChar(255)
+  dishes       Dish[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  DishSnapshot DishSnapshot[]
 }
 
 model Table {
-  number    String   @id @db.VarChar(50)
+  number    String      @id @db.VarChar(50)
   capacity  Int
   orders    Order[]
   guests    Guest[]
-  status    String   @default("Available") @db.VarChar(50)
-  token     String   @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    TableStatus @default(Available)
+  token     String      @db.VarChar(255)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Order {
   id             String       @id @default(uuid())
-  guestId        String?      @db.Char(36)
-  guest          Guest?       @relation(fields: [guestId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  table          Table?       @relation(fields: [tableNumber], references: [number], onDelete: SetNull, onUpdate: NoAction)
-  tableNumber    String?      @db.VarChar(50)
+  guestId        String       @db.Char(36)
+  guest          Guest        @relation(fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  table          Table        @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: NoAction)
+  tableNumber    String       @db.VarChar(50)
   dishSnapshot   DishSnapshot @relation(fields: [dishSnapshotId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   dishSnapshotId String       @unique @db.Char(36)
   options        String?      @db.Text
   quantity       Int
   orderHandler   Account?     @relation(fields: [orderHandlerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   orderHandlerId String?      @db.Char(36)
-  status         String       @default("Pending") @db.VarChar(50)
+  status         OrderStatus  @default(Pending)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
@@ -115,9 +114,8 @@ model RefreshToken {
 
 model Guest {
   id                    String    @id @default(uuid()) @db.Char(36)
-  name                  String    @db.VarChar(255)
-  table                 Table?    @relation(fields: [tableNumber], references: [number], onDelete: SetNull, onUpdate: NoAction)
-  tableNumber           String?   @db.VarChar(50)
+  table                 Table     @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: Cascade)
+  tableNumber           String    @db.VarChar(50)
   orders                Order[]
   refreshToken          String?   @db.VarChar(255)
   refreshTokenExpiresAt DateTime?
@@ -142,5 +140,25 @@ enum DishStatus {
 
 enum DishCategory {
   Buffet
+  Paid
+}
+
+enum Role {
+  Owner
+  Employee
+  Guest
+}
+
+enum TableStatus {
+  Available
+  Hidden
+  Reserved
+}
+
+enum OrderStatus {
+  Pending
+  Processing
+  Rejected
+  Delivered
   Paid
 }

@@ -10,14 +10,14 @@ export class EntityError extends Error {
   }
 }
 export class AuthError extends Error {
-  status: number = 401;
+  status: number = HttpStatusCode.Unauthorized;
   constructor(message: string) {
     super(message);
   }
 }
 
 export class ForbiddenError extends Error {
-  status: number = 403;
+  status: number = HttpStatusCode.Forbidden;
   constructor(message: string) {
     super(message);
   }

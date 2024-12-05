@@ -1,5 +1,5 @@
 import prisma from '@/database';
-import { CreateTableBodyType, UpdateTableBodyType } from '@/schemaValidations/table.schema';
+import { CreateTable, UpdateTable } from '@/schemaValidations/table.schema';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
 import { randomId } from '@/utils/helpers';
 
@@ -19,7 +19,7 @@ export const getTableDetail = (number: string) => {
   });
 };
 
-export const createTable = async (data: CreateTableBodyType) => {
+export const createTable = async (data: CreateTable) => {
   const token = randomId();
   try {
     const result = await prisma.table.create({
@@ -42,7 +42,7 @@ export const createTable = async (data: CreateTableBodyType) => {
   }
 };
 
-export const updateTable = (number: string, data: UpdateTableBodyType) => {
+export const updateTable = (number: string, data: UpdateTable) => {
   if (data.changeToken) {
     const token = randomId();
     // Xóa hết các refresh token của guest theo table

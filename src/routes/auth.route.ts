@@ -6,32 +6,32 @@ import {
   refreshTokenController
 } from '@/controllers/auth.controller';
 import { requireLoginedHook } from '@/hooks/auth.hooks';
-import {
-  LoginBody,
-  LoginBodyType,
-  LoginGoogleQuery,
-  LoginGoogleQueryType,
+import type {
+  Login,
+  LoginGoogle,
   LoginRes,
-  LoginResType,
-  LogoutBody,
-  LogoutBodyType,
-  RefreshTokenBody,
-  RefreshTokenBodyType,
-  RefreshTokenRes,
-  RefreshTokenResType
+  Logout,
+  RefreshToken,
+  RefreshTokenRes
 } from '@/schemaValidations/auth.schema';
-import { MessageRes, MessageResType } from '@/schemaValidations/common.schema';
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { login, loginGoogle, loginRes, logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
+import type { MessageRes } from '@/schemaValidations/common.schema';
+import { message } from '@/schemaValidations/common.schema';
+import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 export default async function authRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
   const queryString = (await import('querystring')).default;
-  fastify.post<{ Reply: MessageResType; Body: LogoutBodyType }>(
+
+  /**
+   *
+   */
+  fastify.post<{ Reply: MessageRes; Body: Logout }>(
     '/logout',
     {
       schema: {
         response: {
-          200: MessageRes
+          200: message
         },
-        body: LogoutBody
+        body: logout
       },
       preValidation: fastify.auth([requireLoginedHook])
     },
@@ -42,14 +42,18 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
       });
     }
   );
-  fastify.post<{ Reply: LoginResType; Body: LoginBodyType }>(
+
+  /**
+   *
+   */
+  fastify.post<{ Reply: LoginRes; Body: Login }>(
     '/login',
     {
       schema: {
         response: {
-          200: LoginRes
+          200: loginRes
         },
-        body: LoginBody
+        body: login
       }
     },
     async (request, reply) => {
@@ -58,20 +62,24 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
       reply.send({
         message: 'Đăng nhập thành công',
         data: {
-          account: account as LoginResType['data']['account'],
+          account,
           accessToken,
           refreshToken
         }
       });
     }
   );
+
+  /**
+   *
+   */
   fastify.get<{
-    Querystring: LoginGoogleQueryType;
+    Querystring: LoginGoogle;
   }>(
     '/login/google',
     {
       schema: {
-        querystring: LoginGoogleQuery
+        querystring: loginGoogle
       }
     },
     async (request, reply) => {
@@ -94,17 +102,21 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
       }
     }
   );
+
+  /**
+   *
+   */
   fastify.post<{
-    Reply: RefreshTokenResType;
-    Body: RefreshTokenBodyType;
+    Reply: RefreshTokenRes;
+    Body: RefreshToken;
   }>(
     '/refresh-token',
     {
       schema: {
         response: {
-          200: RefreshTokenRes
+          200: refreshTokenRes
         },
-        body: RefreshTokenBody
+        body: refreshToken
       }
     },
     async (request, reply) => {

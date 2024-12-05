@@ -1,5 +1,5 @@
 import prisma from '@/database';
-import { CreateDish, CreateDishGroupBodyType, UpdateDish } from '@/schemaValidations/dish.schema';
+import { selectDish, type CreateDish, type CreateDishGroup, type UpdateDish } from '@/schemaValidations/dish.schema';
 
 const select = {
   id: true,
@@ -23,7 +23,7 @@ export const getDishes = async () => {
     orderBy: {
       createdAt: 'desc'
     },
-    select
+    select: selectDish
   });
 };
 
@@ -32,14 +32,14 @@ export const getDish = (id: string) => {
     where: {
       id
     },
-    select
+    select: selectDish
   });
 };
 
 export const createDish = (data: CreateDish) => {
   return prisma.dish.create({
     data,
-    select
+    select: selectDish
   });
 };
 
@@ -49,7 +49,7 @@ export const updateDish = (id: string, data: UpdateDish) => {
       id
     },
     data,
-    select
+    select: selectDish
   });
 };
 
@@ -58,7 +58,7 @@ export const deleteDish = (id: string) => {
     where: {
       id
     },
-    select
+    select: selectDish
   });
 };
 
@@ -70,11 +70,10 @@ export const getDishGroupList = () => {
   });
 };
 
-export const createDishGroup = ({ name, code }: CreateDishGroupBodyType) => {
+export const createDishGroup = ({ name }: CreateDishGroup) => {
   return prisma.dishGroup.create({
     data: {
-      name,
-      code
+      name
     }
   });
 };
