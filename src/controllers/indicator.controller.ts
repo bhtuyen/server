@@ -1,22 +1,23 @@
 import envConfig from '@/config';
 import prisma from '@/database';
+import type { Period } from '@/schemaValidations/common.schema';
+import { selectDishDtoDetail } from '@/schemaValidations/dish.schema';
+import { selectGuestDto } from '@/schemaValidations/guest.schema';
 import type { DashboardIndicator, DishIndicator, RevenueByDate } from '@/schemaValidations/indicator.schema';
+import { selectOrderDtoDetail } from '@/schemaValidations/order.schema';
 import { OrderStatus } from '@prisma/client';
 import { formatInTimeZone } from 'date-fns-tz';
 
-export const dashboardIndicatorController = async ({
-  fromDate,
-  toDate
-}: {
-  fromDate: Date;
-  toDate: Date;
-}): Promise<DashboardIndicator> => {
+/**
+ * @description Get dashboard indicator
+ * @param fromDate
+ * @param toDate
+ * @returns
+ * @buihuytuyen
+ */
+export const dashboardIndicatorController = async ({ fromDate, toDate }: Period): Promise<DashboardIndicator> => {
   const [orders, guests, dishes] = await Promise.all([
     prisma.order.findMany({
-      include: {
-        dishSnapshot: true,
-        table: true
-      },
       orderBy: {
         createdAt: 'desc'
       },
@@ -25,6 +26,10 @@ export const dashboardIndicatorController = async ({
           gte: fromDate,
           lte: toDate
         }
+      },
+      select: {
+        ...selectOrderDtoDetail,
+        createdAt: true
       }
     }),
     prisma.guest.findMany({
@@ -38,9 +43,12 @@ export const dashboardIndicatorController = async ({
             status: OrderStatus.Paid
           }
         }
-      }
+      },
+      select: selectGuestDto
     }),
-    prisma.dish.findMany()
+    prisma.dish.findMany({
+      select: selectDishDtoDetail
+    })
   ]);
 
   // Doanh thu
@@ -49,14 +57,16 @@ export const dashboardIndicatorController = async ({
   const guestCount = guests.length;
   // Số lượng đơn
   const orderCount = orders.length;
+
   // Thống kê món ăn
-  const dishesIndicatorObj: Record<string, DishIndicator> = dishes.reduce((acc, dish) => {
+  const dishesIndicatorObj = dishes.reduce<Record<string, DishIndicator>>((acc, dish) => {
     acc[dish.id] = { ...dish, successOrders: 0 };
     return acc;
-  }, {} as any);
+  }, {});
+
   // Doanh thu theo ngày
   // Tạo object revenueByDateObj với key là ngày từ fromDate -> toDate và value là doanh thu
-  const revenuesByDateObj: { [key: string]: number } = {};
+  const revenuesByDateObj: Record<string, number> = {};
 
   // Lặp từ fromDate -> toDate
   for (let i = fromDate; i <= toDate; i.setDate(i.getDate() + 1)) {
@@ -64,23 +74,27 @@ export const dashboardIndicatorController = async ({
   }
 
   // Số lượng bàn đang được sử dụng
-  const tableNumberObj: { [key: string]: boolean } = {};
+  const tableNumberObj: Record<string, boolean> = {};
+
   orders.forEach((order) => {
     if (order.status === OrderStatus.Paid) {
       revenue += Number(order.dishSnapshot.price) * order.quantity;
+
       if (order.dishSnapshot.dishId && dishesIndicatorObj[order.dishSnapshot.dishId]) {
         dishesIndicatorObj[order.dishSnapshot.dishId].successOrders++;
       }
       const date = formatInTimeZone(order.createdAt, envConfig.SERVER_TIMEZONE, 'dd/MM/yyyy');
+
       revenuesByDateObj[date] = (revenuesByDateObj[date] ?? 0) + Number(order.dishSnapshot.price) * order.quantity;
     }
     if (
       [OrderStatus.Processing, OrderStatus.Pending, OrderStatus.Delivered].includes(order.status as any) &&
-      order.tableNumber !== null
+      order.table.number !== null
     ) {
-      tableNumberObj[order.tableNumber] = true;
+      tableNumberObj[order.table.number] = true;
     }
   });
+
   // Số lượng bàn đang sử dụng
   const servingTableCount = Object.keys(tableNumberObj).length;
 

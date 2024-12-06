@@ -7,7 +7,7 @@ import { DishStatus, OrderStatus, TableStatus } from '@prisma/client';
  * @param orderHandlerId
  * @param body
  * @returns orders list and socketId
- * @author bhtuyen
+ * @buihuytuyen
  */
 export const createOrdersController = async (orderHandlerId: string, body: CreateOrders) => {
   const { guestId, orders } = body;
@@ -91,7 +91,7 @@ export const createOrdersController = async (orderHandlerId: string, body: Creat
  * @param fromDate
  * @param toDate
  * @returns orders list by period
- * @author bhtuyen
+ * @buihuytuyen
  */
 export const getOrdersController = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {
   const orders = await prisma.order.findMany({
@@ -114,7 +114,7 @@ export const getOrdersController = async ({ fromDate, toDate }: { fromDate?: Dat
  * @param guestId
  * @param orderHandlerId
  * @returns orders list and socketId after paid orders for guest by guestId and orderHandlerId
- * @author bhtuyen
+ * @buihuytuyen
  */
 export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId: string; orderHandlerId: string }) => {
   const orders = await prisma.order.findMany({
@@ -172,7 +172,7 @@ export const payOrdersController = async ({ guestId, orderHandlerId }: { guestId
  * @description Get order detail
  * @param orderId
  * @returns order detail by orderId
- * @author bhtuyen
+ * @buihuytuyen
  */
 export const getOrderDetailController = (orderId: string) => {
   return prisma.order.findUniqueOrThrow({
@@ -188,7 +188,7 @@ export const getOrderDetailController = (orderId: string) => {
  * @param orderId
  * @param body
  * @returns order detail and socketId after updated order by orderId and body
- * @author bhtuyen
+ * @buihuytuyen
  */
 export const updateOrderController = async (orderId: string, body: UpdateOrder) => {
   const { status, dishId, quantity, orderHandlerId, options } = body;

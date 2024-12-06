@@ -1,6 +1,6 @@
 import { AuthError, EntityError, ForbiddenError, StatusError, isPrismaClientKnownRequestError } from '@/utils/errors';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { FastifyError } from 'fastify';
+import type { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import type { FastifyError } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { ZodError } from 'zod';
 

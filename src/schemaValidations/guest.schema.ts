@@ -1,12 +1,13 @@
 import { token } from '@/schemaValidations/auth.schema';
 import { buildReply, id, updateAndCreate } from '@/schemaValidations/common.schema';
 import { orderDtoDetail } from '@/schemaValidations/order.schema';
+import { buildSelect } from '@/utils/helpers';
 import z from 'zod';
 
 /**
  * Guest schema
  */
-export const guest = z
+const guest = z
   .object({
     tableNumber: z.string().trim().min(1).max(50),
     refreshToken: z.string().nullable(),
@@ -38,7 +39,12 @@ export const guestLoginRes = buildReply(
     .merge(token)
 );
 export type GuestLogin = z.TypeOf<typeof guestLogin>;
+
+export type GuestDto = z.TypeOf<typeof guestDto>;
+
 export type GuestLoginRes = z.TypeOf<typeof guestLoginRes>;
+
+export const selectGuestDto = buildSelect<GuestDto>();
 
 /**
  * Guest create order
@@ -54,3 +60,15 @@ export const guestCreateOrderRes = buildReply(z.array(orderDtoDetail));
 
 export type GuestCreateOrder = z.TypeOf<typeof guestCreateOrder>;
 export type GuestCreateOrderRes = z.TypeOf<typeof guestCreateOrderRes>;
+
+export const guestsRes = buildReply(z.array(guestDto));
+
+export type GuestsRes = z.TypeOf<typeof guestsRes>;
+
+export const createGuest = guestDto.pick({ tableNumber: true });
+
+export type CreateGuest = z.TypeOf<typeof createGuest>;
+
+export const createGuestRes = buildReply(guestDto);
+
+export type CreateGuestRes = z.TypeOf<typeof createGuestRes>;

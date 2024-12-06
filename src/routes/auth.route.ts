@@ -1,10 +1,5 @@
 import envConfig from '@/config';
-import {
-  loginController,
-  loginGoogleController,
-  logoutController,
-  refreshTokenController
-} from '@/controllers/auth.controller';
+import { login, loginGoogleController, logoutController, refreshToken } from '@/controllers/auth.controller';
 import { requireLoginedHook } from '@/hooks/auth.hooks';
 import type {
   Login,
@@ -14,15 +9,26 @@ import type {
   RefreshToken,
   RefreshTokenRes
 } from '@/schemaValidations/auth.schema';
-import { login, loginGoogle, loginRes, logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
+import {
+  loginGoogle,
+  loginRes,
+  logout,
+  refreshTokenRes,
+  refreshToken as refreshTokenSchema
+} from '@/schemaValidations/auth.schema';
 import type { MessageRes } from '@/schemaValidations/common.schema';
 import { message } from '@/schemaValidations/common.schema';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 export default async function authRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+  /**
+   * @description Require logined hook
+   * @buihuytuyen
+   */
   const queryString = (await import('querystring')).default;
 
   /**
-   *
+   * @description Đăng xuất
+   * @buihuytuyen
    */
   fastify.post<{ Reply: MessageRes; Body: Logout }>(
     '/logout',
@@ -44,7 +50,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
   );
 
   /**
-   *
+   * @description Đăng nhập
+   * @buihuytuyen
    */
   fastify.post<{ Reply: LoginRes; Body: Login }>(
     '/login',
@@ -58,7 +65,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
     },
     async (request, reply) => {
       const { body } = request;
-      const { accessToken, refreshToken, account } = await loginController(body);
+      const { accessToken, refreshToken, account } = await login(body);
       reply.send({
         message: 'Đăng nhập thành công',
         data: {
@@ -71,7 +78,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
   );
 
   /**
-   *
+   * @description Đăng nhập bằng Google
+   * @buihuytuyen
    */
   fastify.get<{
     Querystring: LoginGoogle;
@@ -104,7 +112,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
   );
 
   /**
-   *
+   * @description Lấy token mới
+   * @buihuytuyen
    */
   fastify.post<{
     Reply: RefreshTokenRes;
@@ -116,11 +125,11 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
         response: {
           200: refreshTokenRes
         },
-        body: refreshToken
+        body: refreshTokenSchema
       }
     },
     async (request, reply) => {
-      const result = await refreshTokenController(request.body.refreshToken);
+      const result = await refreshToken(request.body.refreshToken);
       reply.send({
         message: 'Lấy token mới thành công',
         data: result

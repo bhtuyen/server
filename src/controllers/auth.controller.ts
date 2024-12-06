@@ -9,6 +9,12 @@ import { AuthError, EntityError, StatusError } from '@/utils/errors';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
 import axios, { HttpStatusCode } from 'axios';
 
+/**
+ * @description Hàm này thực hiện xử lý đăng xuất.
+ * @param refreshToken
+ * @returns
+ * @buihuytuyen
+ */
 export const logoutController = async (refreshToken: string) => {
   await prisma.refreshToken.delete({
     where: {
@@ -18,7 +24,13 @@ export const logoutController = async (refreshToken: string) => {
   return 'Đăng xuất thành công';
 };
 
-export const loginController = async (body: Login) => {
+/**
+ * @description Hàm này thực hiện xử lý đăng nhập.
+ * @param body
+ * @returns
+ * @buihuytuyen
+ */
+export const login = async (body: Login) => {
   const account = await prisma.account.findUnique({
     where: {
       email: body.email
@@ -57,7 +69,13 @@ export const loginController = async (body: Login) => {
   };
 };
 
-export const refreshTokenController = async (refreshToken: string) => {
+/**
+ * @description Hàm này thực hiện xử lý refresh token.
+ * @param refreshToken
+ * @returns
+ * @buihuytuyen
+ */
+export const refreshToken = async (refreshToken: string) => {
   let decodedRefreshToken: TokenPayload;
   try {
     decodedRefreshToken = verifyRefreshToken(refreshToken);
@@ -104,6 +122,7 @@ export const refreshTokenController = async (refreshToken: string) => {
  * Hàm này thực hiện gửi yêu cầu lấy Google OAuth token dựa trên authorization code nhận được từ client-side.
  * @param {string} code - Authorization code được gửi từ client-side.
  * @returns {Object} - Đối tượng chứa Google OAuth token.
+ * @buihuytuyen
  */
 const getOauthGooleToken = async (code: string): Promise<OauthGoogleToken> => {
   const body = {
@@ -127,6 +146,7 @@ const getOauthGooleToken = async (code: string): Promise<OauthGoogleToken> => {
  * @param {string} tokens.id_token - ID token được lấy từ Google OAuth.
  * @param {string} tokens.access_token - Access token được lấy từ Google OAuth.
  * @returns {Object} - Đối tượng chứa thông tin người dùng từ Google.
+ * @buihuytuyen
  */
 const getGoogleUser = async ({
   id_token,
@@ -147,6 +167,12 @@ const getGoogleUser = async ({
   return data;
 };
 
+/**
+ * @description Hàm này thực hiện xử lý đăng nhập bằng Google.
+ * @param code
+ * @returns
+ * @buihuytuyen
+ */
 export const loginGoogleController = async (code: string) => {
   const data = await getOauthGooleToken(code); // Gửi authorization code để lấy Google OAuth token
   const { id_token, access_token } = data; // Lấy ID token và access token từ kết quả trả về

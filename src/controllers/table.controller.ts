@@ -1,24 +1,43 @@
 import prisma from '@/database';
-import { CreateTable, UpdateTable } from '@/schemaValidations/table.schema';
+import { selectTableDto, type CreateTable, type UpdateTable } from '@/schemaValidations/table.schema';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
 import { randomId } from '@/utils/helpers';
 
+/**
+ * @description Get all tables
+ * @returns
+ * @buihuytuyen
+ */
 export const getTableList = () => {
   return prisma.table.findMany({
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    select: selectTableDto
   });
 };
 
+/**
+ * @description Get table by number
+ * @param number
+ * @returns
+ * @buihuytuyen
+ */
 export const getTableDetail = (number: string) => {
   return prisma.table.findUniqueOrThrow({
     where: {
       number
-    }
+    },
+    select: selectTableDto
   });
 };
 
+/**
+ * @description Create table
+ * @param data
+ * @returns
+ * @buihuytuyen
+ */
 export const createTable = async (data: CreateTable) => {
   const token = randomId();
   try {
@@ -26,7 +45,8 @@ export const createTable = async (data: CreateTable) => {
       data: {
         ...data,
         token
-      }
+      },
+      select: selectTableDto
     });
     return result;
   } catch (error) {
@@ -42,6 +62,13 @@ export const createTable = async (data: CreateTable) => {
   }
 };
 
+/**
+ * @description Update table
+ * @param number
+ * @param data
+ * @returns
+ * @buihuytuyen
+ */
 export const updateTable = (number: string, data: UpdateTable) => {
   if (data.changeToken) {
     const token = randomId();
@@ -56,7 +83,8 @@ export const updateTable = (number: string, data: UpdateTable) => {
             status: data.status,
             capacity: data.capacity,
             token
-          }
+          },
+          select: selectTableDto
         }),
         tx.guest.updateMany({
           where: {
@@ -78,14 +106,22 @@ export const updateTable = (number: string, data: UpdateTable) => {
     data: {
       status: data.status,
       capacity: data.capacity
-    }
+    },
+    select: selectTableDto
   });
 };
 
+/**
+ * @description Delete table
+ * @param number
+ * @returns
+ * @buihuytuyen
+ */
 export const deleteTable = (number: string) => {
   return prisma.table.delete({
     where: {
       number
-    }
+    },
+    select: selectTableDto
   });
 };

@@ -22,6 +22,10 @@ import { dishesRes, dishGroupRes, dishGroupsRes, dishParams, dishRes } from '@/s
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function dishRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+  /**
+   * @description Get dishes
+   * @buihuytuyen
+   */
   fastify.get<{
     Reply: DishesRes;
   }>(
@@ -43,6 +47,10 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
     }
   );
 
+  /**
+   * @description Get dish by id
+   * @buihuytuyen
+   */
   fastify.get<{
     Params: IdParam;
     Reply: DishRes;
@@ -66,6 +74,10 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
     }
   );
 
+  /**
+   * @description Create dish
+   * @buihuytuyen
+   */
   fastify.post<{
     Body: CreateDish;
     Reply: DishRes;
@@ -93,6 +105,10 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
     }
   );
 
+  /**
+   * @description Update dish
+   * @buihuytuyen
+   */
   fastify.put<{
     Params: IdParam;
     Body: UpdateDish;
@@ -120,6 +136,10 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
     }
   );
 
+  /**
+   * @description Delete dish
+   * @buihuytuyen
+   */
   fastify.delete<{
     Params: IdParam;
     Reply: DishRes;
@@ -145,6 +165,10 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
     }
   );
 
+  /**
+   * @description Get dish groups
+   * @buihuytuyen
+   */
   fastify.get<{
     Reply: DishGroupsRes;
   }>(
@@ -165,6 +189,10 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
     }
   );
 
+  /**
+   * @description Create dish group
+   * @buihuytuyen
+   */
   fastify.post<{
     Body: CreateDishGroup;
     Reply: DishGroupRes;

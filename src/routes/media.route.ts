@@ -6,7 +6,16 @@ import fastifyMultipart from '@fastify/multipart';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function mediaRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+  /**
+   * @description register fastify-multipart
+   * @buihuytuyen
+   */
   fastify.register(fastifyMultipart);
+
+  /**
+   * @description Require logined hook, require owner or employee hook, pause api hook
+   * @buihuytuyen
+   */
   fastify.addHook(
     'preValidation',
     fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
@@ -14,6 +23,10 @@ export default async function mediaRoutes(fastify: FastifyInstance, options: Fas
     })
   );
 
+  /**
+   * @description Upload image
+   * @buihuytuyen
+   */
   fastify.post<{
     Reply: UploadImageRes;
   }>(

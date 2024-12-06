@@ -5,16 +5,20 @@ import {
   selectAccountDto,
   type ChangePassword,
   type CreateEmployee,
-  type CreateGuestBodyType,
   type UpdateEmployee,
   type UpdateMe
 } from '@/schemaValidations/account.schema';
+import type { MakeOptional } from '@/types/utils.type';
 import { comparePassword, hashPassword } from '@/utils/crypto';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
 import { getChalk } from '@/utils/helpers';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
-import { Role, TableStatus } from '@prisma/client';
+import { Role } from '@prisma/client';
 
+/**
+ * @description Initialize owner account
+ * @buihuytuyen
+ */
 export const initOwnerAccount = async () => {
   const accountCount = await prisma.account.count();
   if (accountCount === 0) {
@@ -37,7 +41,13 @@ export const initOwnerAccount = async () => {
   }
 };
 
-export const createEmployeeAccount = async (body: CreateEmployee) => {
+/**
+ * @description Create employee account
+ * @param body
+ * @returns
+ * @buihuytuyen
+ */
+export const createEmployee = async (body: CreateEmployee) => {
   try {
     const hashedPassword = await hashPassword(body.password);
     const account = await prisma.account.create({
@@ -48,7 +58,8 @@ export const createEmployeeAccount = async (body: CreateEmployee) => {
         phone: body.phone,
         role: Role.Employee,
         avatar: body.avatar
-      }
+      },
+      select: selectAccountDto
     });
     return account;
   } catch (error: any) {
@@ -61,28 +72,46 @@ export const createEmployeeAccount = async (body: CreateEmployee) => {
   }
 };
 
-export const getEmployeeAccounts = async () => {
+/**
+ * @description Get employee accounts
+ * @returns
+ * @buihuytuyen
+ */
+export const getEmployees = async () => {
   const accounts = await prisma.account.findMany({
     where: {
       role: Role.Employee
     },
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    select: selectAccountDto
   });
   return accounts;
 };
 
-export const getEmployeeAccount = async (accountId: string) => {
+/**
+ * @description Get employee account
+ * @param accountId
+ * @returns
+ * @buihuytuyen
+ */
+export const getEmployee = async (accountId: string) => {
   const account = await prisma.account.findUniqueOrThrow({
     where: {
       id: accountId
-    }
+    },
+    select: selectAccountDto
   });
   return account;
 };
 
-export const getAccountList = async () => {
+/**
+ * @description Get account list
+ * @returns
+ * @buihuytuyen
+ */
+export const getAccounts = async () => {
   const account = await prisma.account.findMany({
     orderBy: {
       createdAt: 'desc'
@@ -92,7 +121,14 @@ export const getAccountList = async () => {
   return account;
 };
 
-export const updateEmployeeAccount = async (accountId: string, body: UpdateEmployee) => {
+/**
+ * @description Update employee account
+ * @param accountId
+ * @param body
+ * @returns
+ * @buihuytuyen
+ */
+export const updateEmployee = async (accountId: string, body: UpdateEmployee) => {
   try {
     const [socketRecord, oldAccount] = await Promise.all([
       prisma.socket.findUnique({
@@ -106,48 +142,40 @@ export const updateEmployeeAccount = async (accountId: string, body: UpdateEmplo
         }
       })
     ]);
+
     if (!oldAccount) {
       throw new EntityError([{ field: 'email', message: 'Tài khoản bạn đang cập nhật không còn tồn tại nữa!' }]);
     }
+
+    const data: MakeOptional<UpdateEmployee, 'role'> = {
+      name: body.name,
+      email: body.email,
+      avatar: body.avatar,
+      phone: body.phone
+    };
+
     const isChangeRole = oldAccount.role !== body.role;
-    if (body.changePassword) {
-      const hashedPassword = await hashPassword(body.password!);
-      const account = await prisma.account.update({
-        where: {
-          id: accountId
-        },
-        data: {
-          name: body.name,
-          email: body.email,
-          avatar: body.avatar,
-          phone: body.phone,
-          password: hashedPassword,
-          role: body.role
-        }
-      });
-      return {
-        account,
-        socketId: socketRecord?.socketId,
-        isChangeRole
-      };
-    } else {
-      const account = await prisma.account.update({
-        where: {
-          id: accountId
-        },
-        data: {
-          name: body.name,
-          email: body.email,
-          avatar: body.avatar,
-          role: body.role
-        }
-      });
-      return {
-        account,
-        socketId: socketRecord?.socketId,
-        isChangeRole
-      };
+    if (isChangeRole) {
+      data.role = body.role;
     }
+
+    if (body.changePassword) {
+      data.password = await hashPassword(body.password!);
+    }
+
+    const account = await prisma.account.update({
+      where: {
+        id: accountId
+      },
+      data,
+      select: selectAccountDto
+    });
+
+    return {
+      account,
+      socketId: socketRecord?.socketId,
+      isChangeRole
+    };
   } catch (error: any) {
     if (isPrismaClientKnownRequestError(error)) {
       if (error.code === PrismaErrorCode.UniqueConstraintViolation) {
@@ -158,7 +186,13 @@ export const updateEmployeeAccount = async (accountId: string, body: UpdateEmplo
   }
 };
 
-export const deleteEmployeeAccount = async (accountId: string) => {
+/**
+ * @description Delete employee account
+ * @param accountId
+ * @returns
+ * @buihuytuyen
+ */
+export const deleteEmployee = async (accountId: string) => {
   const socketRecord = await prisma.socket.findUnique({
     where: {
       accountId
@@ -167,7 +201,8 @@ export const deleteEmployeeAccount = async (accountId: string) => {
   const account = await prisma.account.delete({
     where: {
       id: accountId
-    }
+    },
+    select: selectAccountDto
   });
   return {
     account,
@@ -175,26 +210,48 @@ export const deleteEmployeeAccount = async (accountId: string) => {
   };
 };
 
-export const getMeController = async (accountId: string) => {
+/**
+ * @description Get me
+ * @param accountId
+ * @returns
+ * @buihuytuyen
+ */
+export const getMe = async (accountId: string) => {
   const account = prisma.account.findUniqueOrThrow({
     where: {
       id: accountId
-    }
+    },
+    select: selectAccountDto
   });
   return account;
 };
 
-export const updateMeController = async (accountId: string, body: UpdateMe) => {
+/**
+ * @description Update me
+ * @param accountId
+ * @param body
+ * @returns
+ * @buihuytuyen
+ */
+export const updateMe = async (accountId: string, body: UpdateMe) => {
   const account = prisma.account.update({
     where: {
       id: accountId
     },
-    data: body
+    data: body,
+    select: selectAccountDto
   });
   return account;
 };
 
-export const changePasswordController = async (accountId: string, body: ChangePassword) => {
+/**
+ * @description Change password
+ * @param accountId
+ * @param body
+ * @returns
+ * @buihuytuyen
+ */
+export const changePassword = async (accountId: string, body: ChangePassword) => {
   const account = await prisma.account.findUniqueOrThrow({
     where: {
       id: accountId
@@ -211,13 +268,21 @@ export const changePasswordController = async (accountId: string, body: ChangePa
     },
     data: {
       password: hashedPassword
-    }
+    },
+    select: selectAccountDto
   });
   return newAccount;
 };
 
-export const changePasswordV2Controller = async (accountId: string, body: ChangePassword) => {
-  const account = await changePasswordController(accountId, body);
+/**
+ * @description Change password v2
+ * @param accountId
+ * @param body
+ * @returns
+ * @buihuytuyen
+ */
+export const changePasswordV2 = async (accountId: string, body: ChangePassword) => {
+  const account = await changePassword(accountId, body);
   await prisma.refreshToken.deleteMany({
     where: {
       accountId
@@ -225,11 +290,11 @@ export const changePasswordV2Controller = async (accountId: string, body: Change
   });
   const accessToken = signAccessToken({
     userId: account.id,
-    role: account.role as Role
+    role: account.role
   });
   const refreshToken = signRefreshToken({
     userId: account.id,
-    role: account.role as Role
+    role: account.role
   });
   const decodedRefreshToken = verifyRefreshToken(refreshToken);
   const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
@@ -245,38 +310,4 @@ export const changePasswordV2Controller = async (accountId: string, body: Change
     accessToken,
     refreshToken
   };
-};
-
-export const getGuestList = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {
-  const orders = await prisma.guest.findMany({
-    orderBy: {
-      createdAt: 'desc'
-    },
-    where: {
-      createdAt: {
-        gte: fromDate,
-        lte: toDate
-      }
-    }
-  });
-  return orders;
-};
-
-export const createGuestController = async (body: CreateGuestBodyType) => {
-  const table = await prisma.table.findUnique({
-    where: {
-      number: body.tableNumber
-    }
-  });
-  if (!table) {
-    throw new Error('Bàn không tồn tại');
-  }
-
-  if (table.status === TableStatus.Hidden) {
-    throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn bàn khác`);
-  }
-  const guest = await prisma.guest.create({
-    data: body
-  });
-  return guest;
 };

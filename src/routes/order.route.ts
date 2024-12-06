@@ -7,8 +7,8 @@ import {
   updateOrderController
 } from '@/controllers/order.controller';
 import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import type { IdParam, PeriodParam } from '@/schemaValidations/common.schema';
-import { idParam, periodParam } from '@/schemaValidations/common.schema';
+import type { IdParam, Period } from '@/schemaValidations/common.schema';
+import { idParam, period } from '@/schemaValidations/common.schema';
 import type {
   CreateOrders,
   GuestPayOrders,
@@ -27,7 +27,8 @@ import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function orderRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
   /**
-   *
+   * @description Require logined hook, require owner or employee hook
+   * @buihuytuyen
    */
   fastify.addHook(
     'preValidation',
@@ -39,7 +40,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
   /**
    * @POST /api/orders
    * @description Create orders for guest
-   * @author bhtuyen
+   * @buihuytuyen
    */
   fastify.post<{ Reply: OrdersDtoDetailRes; Body: CreateOrders }>(
     '/',
@@ -68,16 +69,16 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
   /**
    * @GET /api/orders
    * @description Get orders list by period
-   * @author bhtuyen
+   * @buihuytuyen
    */
-  fastify.get<{ Reply: OrdersDtoDetailRes; Querystring: PeriodParam }>(
+  fastify.get<{ Reply: OrdersDtoDetailRes; Querystring: Period }>(
     '/',
     {
       schema: {
         response: {
           200: ordersDtoDetailRes
         },
-        querystring: periodParam
+        querystring: period
       }
     },
     async (request, reply) => {
@@ -96,7 +97,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
   /**
    * @GET /api/orders/:id
    * @description Get order detail by id
-   * @author bhtuyen
+   * @buihuytuyen
    */
   fastify.get<{ Reply: OrderDtoDetailRes; Params: IdParam }>(
     '/:id',
@@ -117,6 +118,11 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
     }
   );
 
+  /**
+   * @PUT /api/orders/:id
+   * @description Update order by id
+   * @buihuytuyen
+   */
   fastify.put<{ Reply: OrderDtoDetailRes; Body: UpdateOrder; Params: IdParam }>(
     '/:id',
     {
@@ -142,6 +148,11 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
     }
   );
 
+  /**
+   * @POST /api/orders/pay
+   * @description Pay orders for guest
+   * @buihuytuyen
+   */
   fastify.post<{ Body: GuestPayOrders; Reply: OrdersDtoDetailRes }>(
     '/pay',
     {

@@ -6,7 +6,7 @@ import z from 'zod';
 /**
  * updateMeSchema
  */
-export const dish = z
+const dish = z
   .object({
     price: z.instanceof(Prisma.Decimal).nullable().default(new Prisma.Decimal(0)),
     description: z.string().max(10000).nullable().default(null),
@@ -19,40 +19,45 @@ export const dish = z
   .merge(updateAndCreate)
   .merge(id)
   .merge(name);
-export const dishGroup = name.merge(updateAndCreate).merge(id);
-export const dishGroupDto = dishGroup.omit({ createdAt: true, updatedAt: true });
-export const dishDto = dish.omit({ createdAt: true, updatedAt: true, groupId: true }).extend({
-  group: dishGroupDto
+
+const dishSnapshot = dish.extend({
+  dishId: z.string().uuid()
 });
 
+export const dishGroup = name.merge(updateAndCreate).merge(id);
+export const dishGroupDto = dishGroup.omit({ createdAt: true, updatedAt: true });
+export const dishDto = dish.omit({ createdAt: true, updatedAt: true });
+export const dishDtoDetail = dishDto.omit({ groupId: true }).extend({
+  group: dishGroupDto
+});
 export const createDish = dish.omit({ id: true, createdAt: true, updatedAt: true });
-
 export const updateDish = dish.omit({ id: true, createdAt: true, updatedAt: true });
-
-export const dishRes = buildReply(dishDto);
-
-export const dishesRes = buildReply(z.array(dishDto));
-
-export const dishParams = dishDto.pick({ id: true });
-
+export const dishRes = buildReply(dishDtoDetail);
+export const dishesRes = buildReply(z.array(dishDtoDetail));
+export const dishParams = dishDtoDetail.pick({ id: true });
 export const dishGroupRes = buildReply(dishGroupDto);
 export const dishGroupsRes = buildReply(z.array(dishGroupDto));
 export const createDishGroup = dishGroupDto.pick({ name: true });
+export const selectDishDtoDetail = buildSelect<DishDtoDetail>();
 
-export const selectDish = buildSelect<DishDto>();
+export const selectDishDto = buildSelect<DishDto>();
+
+export const selectDishGroupDto = buildSelect<DishGroupDto>();
+
+export const dishSnapshotDto = dishSnapshot.omit({ createdAt: true, updatedAt: true });
 
 /**
  * Type
  */
 export type Dish = z.TypeOf<typeof dish>;
-export type DishDto = z.TypeOf<typeof dishDto>;
+export type DishDtoDetail = z.TypeOf<typeof dishDtoDetail>;
 export type CreateDish = z.TypeOf<typeof createDish>;
 export type UpdateDish = z.TypeOf<typeof updateDish>;
 export type DishRes = z.TypeOf<typeof dishRes>;
 export type DishesRes = z.TypeOf<typeof dishesRes>;
-
 export type DishGroupRes = z.TypeOf<typeof dishGroupRes>;
-
 export type DishGroupsRes = z.TypeOf<typeof dishGroupsRes>;
-
 export type CreateDishGroup = z.TypeOf<typeof createDishGroup>;
+export type DishDto = z.TypeOf<typeof dishDto>;
+
+export type DishGroupDto = z.TypeOf<typeof dishGroupDto>;

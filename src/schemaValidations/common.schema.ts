@@ -34,7 +34,7 @@ export const buildReply = <T>(data: z.ZodType<T>) => {
   return message.merge(z.object({ data })).strict();
 };
 
-export const periodParam = z
+export const period = z
   .object({
     fromDate: z.coerce.date(),
     toDate: z.coerce.date()
@@ -49,4 +49,4 @@ export const periodParam = z
     }
   });
 
-export type PeriodParam = z.TypeOf<typeof periodParam>;
+export type Period = z.TypeOf<typeof period>;

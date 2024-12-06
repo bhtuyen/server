@@ -7,6 +7,12 @@ import { pipeline } from 'stream';
 import util from 'util';
 const pump = util.promisify(pipeline);
 
+/**
+ * @description Upload image
+ * @param data
+ * @returns
+ * @buihuytuyen
+ */
 export const uploadImage = async (data: MultipartFile) => {
   const uniqueId = randomId();
   const ext = path.extname(data.filename);
