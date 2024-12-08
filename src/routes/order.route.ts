@@ -1,28 +1,10 @@
 import { ManagerRoom } from '@/constants/const';
-import {
-  createOrdersController,
-  getOrderDetailController,
-  getOrdersController,
-  payOrdersController,
-  updateOrderController
-} from '@/controllers/order.controller';
+import orderController from '@/controllers/order.controller';
 import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import type { IdParam, Period } from '@/schemaValidations/common.schema';
 import { idParam, period } from '@/schemaValidations/common.schema';
-import type {
-  CreateOrders,
-  GuestPayOrders,
-  OrderDtoDetailRes,
-  OrdersDtoDetailRes,
-  UpdateOrder
-} from '@/schemaValidations/order.schema';
-import {
-  createOrders,
-  guestPayOrders,
-  orderDtoDetailRes,
-  ordersDtoDetailRes,
-  updateOrder
-} from '@/schemaValidations/order.schema';
+import type { CreateOrders, GuestPayOrders, OrderDtoDetailRes, OrdersDtoDetailRes, UpdateOrder } from '@/schemaValidations/order.schema';
+import { createOrders, guestPayOrders, orderDtoDetailRes, ordersDtoDetailRes, updateOrder } from '@/schemaValidations/order.schema';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function orderRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
@@ -53,7 +35,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const { socketId, orders } = await createOrdersController(request.decodedAccessToken!.userId, request.body);
+      const { socketId, orders } = await orderController.createOrdersController(request.decodedAccessToken!.userId, request.body);
       if (socketId) {
         fastify.io.to(ManagerRoom).to(socketId).emit('new-order', orders);
       } else {
@@ -82,7 +64,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const data = await getOrdersController({
+      const data = await orderController.getOrdersController({
         fromDate: request.query.fromDate,
         toDate: request.query.toDate
       });
@@ -110,7 +92,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const data = await getOrderDetailController(request.params.id);
+      const data = await orderController.getOrderDetailController(request.params.id);
       reply.send({
         message: 'Lấy đơn hàng thành công',
         data
@@ -135,7 +117,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const result = await updateOrderController(request.params.id, request.body);
+      const result = await orderController.updateOrder({ ...request.body, id: request.params.id });
       if (result.socketId) {
         fastify.io.to(result.socketId).to(ManagerRoom).emit('update-order', result.order);
       } else {
@@ -164,7 +146,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const result = await payOrdersController({
+      const result = await orderController.payOrdersController({
         guestId: request.body.guestId,
         orderHandlerId: request.decodedAccessToken!.userId
       });

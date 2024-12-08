@@ -1,14 +1,4 @@
-import {
-  changePassword,
-  changePasswordV2,
-  createEmployee,
-  deleteEmployee,
-  getAccounts,
-  getEmployee,
-  getMe,
-  updateEmployee,
-  updateMe
-} from '@/controllers/account.controller';
+import accountController from '@/controllers/account.controller';
 import { pauseApiHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import type {
   AccountRes,
@@ -18,7 +8,14 @@ import type {
   UpdateEmployee,
   UpdateMe
 } from '@/schemaValidations/account.schema';
-import { accountRes, accountsRes } from '@/schemaValidations/account.schema';
+import {
+  accountRes,
+  accountsRes,
+  changePassword,
+  createEmployee,
+  updateEmployee,
+  updateMe
+} from '@/schemaValidations/account.schema';
 import type { LoginRes } from '@/schemaValidations/auth.schema';
 import { loginRes } from '@/schemaValidations/auth.schema';
 import type { IdParam } from '@/schemaValidations/common.schema';
@@ -47,7 +44,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       preValidation: fastify.auth([requireOwnerHook])
     },
     async (request, reply) => {
-      const accounts = await getAccounts();
+      const accounts = await accountController.getAccounts();
       reply.send({
         data: accounts,
         message: 'Lấy danh sách nhân viên thành công'
@@ -74,7 +71,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       preValidation: fastify.auth([requireOwnerHook, pauseApiHook])
     },
     async (request, reply) => {
-      const account = await createEmployee(request.body);
+      const account = await accountController.createEmployee(request.body);
       reply.send({
         data: account,
         message: 'Tạo tài khoản thành công'
@@ -99,7 +96,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     },
     async (request, reply) => {
       const accountId = request.params.id;
-      const account = await getEmployee(accountId);
+      const account = await accountController.getEmployee(accountId);
       reply.send({
         data: account,
         message: 'Lấy thông tin nhân viên thành công'
@@ -126,7 +123,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const accountId = request.params.id;
       const body = request.body;
-      const { account, socketId, isChangeRole } = await updateEmployee(accountId, body);
+      const { account, socketId, isChangeRole } = await accountController.updateEmployee({ ...body, id: accountId });
       if (isChangeRole && socketId) {
         fastify.io.to(socketId).emit('refresh-token', account);
       }
@@ -154,7 +151,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     },
     async (request, reply) => {
       const accountId = request.params.id;
-      const { account, socketId } = await deleteEmployee(accountId);
+      const { account, socketId } = await accountController.deleteEmployee(accountId);
       if (socketId) {
         fastify.io.to(socketId).emit('logout', account);
       }
@@ -179,7 +176,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       }
     },
     async (request, reply) => {
-      const account = await getMe(request.decodedAccessToken!.userId);
+      const account = await accountController.getMe(request.decodedAccessToken!.userId);
       reply.send({
         data: account,
         message: 'Lấy thông tin thành công'
@@ -206,7 +203,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
-      const result = await updateMe(request.decodedAccessToken!.userId, request.body);
+      const result = await accountController.updateMe(request.decodedAccessToken!.userId, request.body);
       reply.send({
         data: result,
         message: 'Cập nhật thông tin thành công'
@@ -233,7 +230,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
-      const result = await changePassword(request.decodedAccessToken!.userId, request.body);
+      const result = await accountController.changePassword(request.decodedAccessToken!.userId, request.body);
       reply.send({
         data: result,
         message: 'Đổi mật khẩu thành công'
@@ -260,7 +257,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
-      const result = await changePasswordV2(request.decodedAccessToken!.userId, request.body);
+      const result = await accountController.changePasswordV2(request.decodedAccessToken!.userId, request.body);
       reply.send({
         data: result,
         message: 'Đổi mật khẩu thành công'

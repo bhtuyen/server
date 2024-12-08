@@ -1,35 +1,12 @@
 import { ManagerRoom } from '@/constants/const';
-import {
-  createGuest,
-  getGuests,
-  guestCreateOrders,
-  guestGetOrders,
-  guestLogin,
-  guestLogout,
-  guestRefreshToken
-} from '@/controllers/guest.controller';
+import guestController from '@/controllers/guest.controller';
 import { requireEmployeeHook, requireGuestHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import type { Logout, RefreshToken, RefreshTokenRes } from '@/schemaValidations/auth.schema';
 import { logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
 import type { MessageRes, Period } from '@/schemaValidations/common.schema';
 import { message, period } from '@/schemaValidations/common.schema';
-import type {
-  CreateGuest,
-  CreateGuestRes,
-  GuestCreateOrder,
-  GuestCreateOrderRes,
-  GuestLogin,
-  GuestLoginRes,
-  GuestsRes
-} from '@/schemaValidations/guest.schema';
-import {
-  createGuestRes,
-  createGuest as createGuestSchema,
-  guestCreateOrder,
-  guestCreateOrderRes,
-  guestLoginRes,
-  guestsRes
-} from '@/schemaValidations/guest.schema';
+import type { CreateGuest, CreateGuestRes, GuestCreateOrderRes, GuestCreateOrders, GuestLogin, GuestLoginRes, GuestsRes } from '@/schemaValidations/guest.schema';
+import { createGuest, createGuestRes, guestCreateOrderRes, guestCreateOrders, guestLogin, guestLoginRes, guestsRes } from '@/schemaValidations/guest.schema';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function guestRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
@@ -49,7 +26,7 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
     },
     async (request, reply) => {
       const { body } = request;
-      const result = await guestLogin(body);
+      const result = await guestController.guestLogin(body);
       reply.send({
         message: 'Đăng nhập thành công',
         data: result
@@ -73,7 +50,7 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       preValidation: fastify.auth([requireLoginedHook])
     },
     async (request, reply) => {
-      const message = await guestLogout(request.decodedAccessToken!.userId);
+      const message = await guestController.guestLogout(request.decodedAccessToken!.userId);
       reply.send({
         message
       });
@@ -98,7 +75,7 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       }
     },
     async (request, reply) => {
-      const result = await guestRefreshToken(request.body.refreshToken);
+      const result = await guestController.guestRefreshToken(request.body.refreshToken);
       reply.send({
         message: 'Lấy token mới thành công',
         data: result
@@ -112,7 +89,7 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
    */
   fastify.post<{
     Reply: GuestCreateOrderRes;
-    Body: GuestCreateOrder;
+    Body: GuestCreateOrders;
   }>(
     '/orders',
     {
@@ -120,13 +97,13 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
         response: {
           200: guestCreateOrderRes
         },
-        body: guestCreateOrder
+        body: guestCreateOrders
       },
       preValidation: fastify.auth([requireLoginedHook, requireGuestHook])
     },
     async (request, reply) => {
       const guestId = request.decodedAccessToken?.userId;
-      const result = await guestCreateOrders(guestId!, request.body);
+      const result = await guestController.guestCreateOrders(guestId!, request.body);
       fastify.io.to(ManagerRoom).emit('new-order', result);
       reply.send({
         message: 'Đặt món thành công',
@@ -153,7 +130,7 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
     },
     async (request, reply) => {
       const guestId = request.decodedAccessToken?.userId;
-      const result = await guestGetOrders(guestId!);
+      const result = await guestController.guestGetOrders(guestId!);
       reply.send({
         message: 'Lấy danh sách đơn hàng thành công',
         data: result
@@ -172,14 +149,14 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
         response: {
           200: createGuestRes
         },
-        body: createGuestSchema
+        body: createGuest
       },
       preValidation: fastify.auth([requireOwnerHook, requireEmployeeHook], {
         relation: 'or'
       })
     },
     async (request, reply) => {
-      const result = await createGuest(request.body);
+      const result = await guestController.createGuest(request.body);
       reply.send({
         message: 'Tạo tài khoản khách thành công',
         data: result
@@ -205,7 +182,7 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       })
     },
     async ({ query: { fromDate, toDate } }, reply) => {
-      const result = await getGuests({
+      const result = await guestController.getGuests({
         fromDate,
         toDate
       });

@@ -19,34 +19,33 @@ const account = z
 
 export const accountDto = account.omit({
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
+  password: true
 });
 
 export const accountsRes = buildReply(z.array(accountDto));
 
 export const accountRes = buildReply(accountDto);
 
-export type Account = z.TypeOf<typeof account>;
 export type AccountDto = z.TypeOf<typeof accountDto>;
 
 export type AccountsRes = z.TypeOf<typeof accountsRes>;
 
 export type AccountRes = z.TypeOf<typeof accountRes>;
 
-export const selectAccountDto = buildSelect<AccountDto>();
+export const selectAccountDto = buildSelect(accountDto);
 
-export const createEmployee = account
+export const createEmployee = accountDto
   .pick({
     name: true,
     email: true,
     phone: true,
-    avatar: true,
-    password: true
+    avatar: true
   })
   .extend({
-    confirmPassword: z.string().min(6).max(100)
+    confirmPassword: z.string().min(6).max(100),
+    password: z.string().min(6).max(100)
   })
-  .strict()
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {
       ctx.addIssue({
@@ -59,12 +58,13 @@ export const createEmployee = account
 
 export type CreateEmployee = z.TypeOf<typeof createEmployee>;
 
-export const updateEmployee = account
+export const updateEmployee = accountDto
   .pick({
     name: true,
     email: true,
     phone: true,
-    avatar: true
+    avatar: true,
+    id: true
   })
   .extend({
     changePassword: z.boolean().optional(),
@@ -72,7 +72,6 @@ export const updateEmployee = account
     confirmPassword: z.string().min(6).max(100).optional(),
     role: z.enum([Role.Employee, Role.Owner]).optional().default(Role.Employee)
   })
-  .strict()
   .superRefine(({ confirmPassword, password, changePassword }, ctx) => {
     if (changePassword) {
       if (!password || !confirmPassword) {
@@ -93,7 +92,7 @@ export const updateEmployee = account
 
 export type UpdateEmployee = z.TypeOf<typeof updateEmployee>;
 
-export const updateMe = account
+export const updateMe = accountDto
   .pick({
     name: true,
     avatar: true

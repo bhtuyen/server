@@ -1,24 +1,8 @@
-import {
-  createDish,
-  createDishGroup,
-  deleteDish,
-  getDish,
-  getDishes,
-  getDishGroupList,
-  updateDish
-} from '@/controllers/dish.controller';
+import dishController from '@/controllers/dish.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import type { IdParam } from '@/schemaValidations/common.schema';
-import type {
-  CreateDish,
-  CreateDishGroup,
-  DishesRes,
-  DishGroupRes,
-  DishGroupsRes,
-  DishRes,
-  UpdateDish
-} from '@/schemaValidations/dish.schema';
-import { dishesRes, dishGroupRes, dishGroupsRes, dishParams, dishRes } from '@/schemaValidations/dish.schema';
+import type { CreateDish, CreateDishGroup, DishesRes, DishGroupRes, DishGroupsRes, DishRes, UpdateDish } from '@/schemaValidations/dish.schema';
+import { createDish, createDishGroup, dishesRes, dishGroupRes, dishGroupsRes, dishParams, dishRes, updateDish } from '@/schemaValidations/dish.schema';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function dishRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
@@ -38,7 +22,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       }
     },
     async (request, reply) => {
-      const data = await getDishes();
+      const data = await dishController.getDishes();
 
       reply.send({
         data,
@@ -65,7 +49,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       }
     },
     async (request, reply) => {
-      const data = await getDish(request.params.id);
+      const data = await dishController.getDish(request.params.id);
 
       reply.send({
         data,
@@ -96,7 +80,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
-      const data = await createDish(request.body);
+      const data = await dishController.createDish(request.body);
 
       reply.send({
         data,
@@ -128,7 +112,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
-      const data = await updateDish(request.params.id, request.body);
+      const data = await dishController.updateDish({ ...request.body, id: request.params.id });
       reply.send({
         data,
         message: 'Cập nhật món ăn thành công!'
@@ -157,7 +141,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
-      const data = await deleteDish(request.params.id);
+      const data = await dishController.deleteDish(request.params.id);
       reply.send({
         message: 'Xóa món ăn thành công!',
         data
@@ -181,7 +165,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       }
     },
     async (request, reply) => {
-      const dishCaregories = await getDishGroupList();
+      const dishCaregories = await dishController.getDishGroupList();
       reply.send({
         data: dishCaregories,
         message: 'Lấy danh sách danh mục món ăn thành công!'
@@ -211,7 +195,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
-      const dish = await createDishGroup(request.body);
+      const dish = await dishController.createDishGroup(request.body);
       reply.send({
         data: dish,
         message: 'Tạo thành công!'

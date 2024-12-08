@@ -1,7 +1,8 @@
-import { createTable, deleteTable, getTableDetail, getTableList, updateTable } from '@/controllers/table.controller';
+import tableController from '@/controllers/table.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import type { CreateTable, TableParam, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
-import { tableParam, tableRes, tablesRes } from '@/schemaValidations/table.schema';
+import { IdParam, idParam } from '@/schemaValidations/common.schema';
+import type { CreateTable, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
+import { createTable, tableRes, tablesRes, updateTable } from '@/schemaValidations/table.schema';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function tablesRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
@@ -21,7 +22,7 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
       }
     },
     async (request, reply) => {
-      const tables = await getTableList();
+      const tables = await tableController.getTableList();
       reply.send({
         data: tables,
         message: 'Lấy danh sách bàn thành công!'
@@ -34,20 +35,20 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
    * @buihuytuyen
    */
   fastify.get<{
-    Params: TableParam;
+    Params: IdParam;
     Reply: TableRes;
   }>(
-    '/:number',
+    '/:id',
     {
       schema: {
-        params: tableParam,
+        params: idParam,
         response: {
           200: tableRes
         }
       }
     },
     async (request, reply) => {
-      const table = await getTableDetail(request.params.number);
+      const table = await tableController.getTableDetail(request.params.id);
       reply.send({
         data: table,
         message: 'Lấy thông tin bàn thành công!'
@@ -79,7 +80,7 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
       })
     },
     async (request, reply) => {
-      const table = await createTable(request.body);
+      const table = await tableController.createTable(request.body);
       reply.send({
         data: table,
         message: 'Tạo bàn thành công!'
@@ -92,14 +93,14 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
    * @buihuytuyen
    */
   fastify.put<{
-    Params: TableParam;
+    Params: IdParam;
     Body: UpdateTable;
     Reply: TableRes;
   }>(
-    '/:number',
+    '/:id',
     {
       schema: {
-        params: tableParam,
+        params: idParam,
         body: updateTable,
         response: {
           200: tableRes
@@ -113,7 +114,7 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
       })
     },
     async (request, reply) => {
-      const table = await updateTable(request.params.number, request.body);
+      const table = await tableController.updateTable({ ...request.body, id: request.params.id });
       reply.send({
         data: table,
         message: 'Cập nhật bàn thành công!'
@@ -126,13 +127,13 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
    * @buihuytuyen
    */
   fastify.delete<{
-    Params: TableParam;
+    Params: IdParam;
     Reply: TableRes;
   }>(
-    '/:number',
+    '/:id',
     {
       schema: {
-        params: tableParam,
+        params: idParam,
         response: {
           200: tableRes
         }
@@ -145,7 +146,7 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
       })
     },
     async (request, reply) => {
-      const table = await deleteTable(request.params.number);
+      const table = await tableController.deleteTable(request.params.id);
       reply.send({
         message: 'Xóa bàn thành công!',
         data: table

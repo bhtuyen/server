@@ -1,25 +1,8 @@
 import { token } from '@/schemaValidations/auth.schema';
-import { buildReply, id, updateAndCreate } from '@/schemaValidations/common.schema';
-import { orderDtoDetail } from '@/schemaValidations/order.schema';
+import { buildReply } from '@/schemaValidations/common.schema';
+import { guestDto, orderDtoDetail } from '@/schemaValidations/order.schema';
 import { buildSelect } from '@/utils/helpers';
 import z from 'zod';
-
-/**
- * Guest schema
- */
-const guest = z
-  .object({
-    tableNumber: z.string().trim().min(1).max(50),
-    refreshToken: z.string().nullable(),
-    refreshTokenExpiresAt: z.date().nullable()
-  })
-  .merge(updateAndCreate)
-  .merge(id);
-
-export const guestDto = guest.pick({
-  id: true,
-  tableNumber: true
-});
 
 /**
  * Guest login
@@ -44,12 +27,12 @@ export type GuestDto = z.TypeOf<typeof guestDto>;
 
 export type GuestLoginRes = z.TypeOf<typeof guestLoginRes>;
 
-export const selectGuestDto = buildSelect<GuestDto>();
+export const selectGuestDto = buildSelect(guestDto);
 
 /**
  * Guest create order
  */
-export const guestCreateOrder = z.array(
+export const guestCreateOrders = z.array(
   z.object({
     dishId: z.string().uuid(),
     quantity: z.number().min(1).max(20),
@@ -58,7 +41,7 @@ export const guestCreateOrder = z.array(
 );
 export const guestCreateOrderRes = buildReply(z.array(orderDtoDetail));
 
-export type GuestCreateOrder = z.TypeOf<typeof guestCreateOrder>;
+export type GuestCreateOrders = z.TypeOf<typeof guestCreateOrders>;
 export type GuestCreateOrderRes = z.TypeOf<typeof guestCreateOrderRes>;
 
 export const guestsRes = buildReply(z.array(guestDto));

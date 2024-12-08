@@ -1,20 +1,11 @@
 // Import the framework and instantiate it
 import envConfig, { API_URL } from '@/config';
-import { initOwnerAccount } from '@/controllers/account.controller';
+import accountController from '@/controllers/account.controller';
 import autoRemoveRefreshTokenJob from '@/jobs/autoRemoveRefreshToken.job';
 import { errorHandlerPlugin } from '@/plugins/errorHandler.plugins';
 import { socketPlugin } from '@/plugins/socket.plugins';
 import validatorCompilerPlugin from '@/plugins/validatorCompiler.plugins';
-import accountRoutes from '@/routes/account.route';
-import authRoutes from '@/routes/auth.route';
-import dishRoutes from '@/routes/dish.route';
-import guestRoutes from '@/routes/guest.route';
-import indicatorRoutes from '@/routes/indicator.route';
-import mediaRoutes from '@/routes/media.route';
-import orderRoutes from '@/routes/order.route';
-import staticRoutes from '@/routes/static.route';
-import tablesRoutes from '@/routes/table.route';
-import testRoutes from '@/routes/test.route';
+import { accountRoutes, authRoutes, dishRoutes, guestRoutes, indicatorRoutes, mediaRoutes, orderRoutes, staticRoutes, tablesRoutes, testRoutes } from '@/routes';
 import { createFolder } from '@/utils/helpers';
 import fastifyAuth from '@fastify/auth';
 import fastifyCookie from '@fastify/cookie';
@@ -88,7 +79,7 @@ const start = async () => {
     fastify.register(indicatorRoutes, {
       prefix: '/indicators'
     });
-    await initOwnerAccount();
+    await accountController.initOwnerAccount();
     await fastify.listen({
       port: envConfig.PORT
     });

@@ -1,7 +1,6 @@
 import { accountDto } from '@/schemaValidations/account.schema';
 import { buildReply, id, updateAndCreate } from '@/schemaValidations/common.schema';
 import { dishSnapshotDto } from '@/schemaValidations/dish.schema';
-import { guestDto } from '@/schemaValidations/guest.schema';
 import { tableDto } from '@/schemaValidations/table.schema';
 import { buildSelect } from '@/utils/helpers';
 import { OrderStatus } from '@prisma/client';
@@ -20,10 +19,25 @@ const order = z
   .merge(updateAndCreate)
   .merge(id);
 
-export const orderDto = order.omit({
-  createdAt: true,
-  updatedAt: true
+/**
+ * Guest schema
+ */
+const guest = z
+  .object({
+    tableNumber: z.string().trim().min(1).max(50),
+    refreshToken: z.string().nullable(),
+    refreshTokenExpiresAt: z.date().nullable()
+  })
+  .merge(updateAndCreate)
+  .merge(id);
+
+export const guestDto = guest.pick({
+  id: true,
+  tableNumber: true,
+  createdAt: true
 });
+
+export const orderDto = order;
 
 export type OrderDto = z.TypeOf<typeof orderDto>;
 
@@ -48,7 +62,8 @@ export const updateOrder = orderDto
     status: true,
     quantity: true,
     options: true,
-    orderHandlerId: true
+    orderHandlerId: true,
+    id: true
   })
   .merge(
     z.object({
@@ -63,9 +78,9 @@ export const orderDtoDetailRes = buildReply(orderDtoDetail);
 
 export type OrderDtoDetailRes = z.TypeOf<typeof orderDtoDetailRes>;
 
-export const selectOrderDtoDetail = buildSelect<OrderDtoDetail>();
+export const selectOrderDtoDetail = buildSelect(orderDtoDetail);
 
-export const selectOrderDto = buildSelect<OrderDto>();
+export const selectOrderDto = buildSelect(orderDto);
 
 export const ordersDtoDetailRes = buildReply(z.array(orderDtoDetail));
 

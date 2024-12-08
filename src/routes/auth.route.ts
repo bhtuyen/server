@@ -1,21 +1,8 @@
 import envConfig from '@/config';
-import { login, loginGoogleController, logoutController, refreshToken } from '@/controllers/auth.controller';
+import authController from '@/controllers/auth.controller';
 import { requireLoginedHook } from '@/hooks/auth.hooks';
-import type {
-  Login,
-  LoginGoogle,
-  LoginRes,
-  Logout,
-  RefreshToken,
-  RefreshTokenRes
-} from '@/schemaValidations/auth.schema';
-import {
-  loginGoogle,
-  loginRes,
-  logout,
-  refreshTokenRes,
-  refreshToken as refreshTokenSchema
-} from '@/schemaValidations/auth.schema';
+import type { Login, LoginGoogle, LoginRes, Logout, RefreshToken, RefreshTokenRes } from '@/schemaValidations/auth.schema';
+import { login, loginGoogle, loginRes, logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
 import type { MessageRes } from '@/schemaValidations/common.schema';
 import { message } from '@/schemaValidations/common.schema';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
@@ -42,7 +29,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
       preValidation: fastify.auth([requireLoginedHook])
     },
     async (request, reply) => {
-      const message = await logoutController(request.body.refreshToken);
+      const message = await authController.logout(request.body.refreshToken);
       reply.send({
         message
       });
@@ -65,7 +52,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
     },
     async (request, reply) => {
       const { body } = request;
-      const { accessToken, refreshToken, account } = await login(body);
+      console.log(body);
+      const { accessToken, refreshToken, account } = await authController.login(body);
       reply.send({
         message: 'Đăng nhập thành công',
         data: {
@@ -93,7 +81,7 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
     async (request, reply) => {
       const code = request.query.code;
       try {
-        const { accessToken, refreshToken } = await loginGoogleController(code);
+        const { accessToken, refreshToken } = await authController.loginGoogle(code);
         const qs = queryString.stringify({
           accessToken,
           refreshToken,
@@ -125,11 +113,11 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
         response: {
           200: refreshTokenRes
         },
-        body: refreshTokenSchema
+        body: refreshToken
       }
     },
     async (request, reply) => {
-      const result = await refreshToken(request.body.refreshToken);
+      const result = await authController.refreshToken(request.body.refreshToken);
       reply.send({
         message: 'Lấy token mới thành công',
         data: result

@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
+import z from 'zod';
 
 export const randomId = () => crypto.randomUUID().replace(/-/g, '');
 
@@ -15,18 +16,22 @@ export const getChalk = async () => {
   return chalk;
 };
 
-export function buildSelect<TDto>(): Record<keyof TDto, any> {
-  const isObject = (value: unknown): value is object =>
-    value !== null && typeof value === 'object' && !Array.isArray(value);
 
-  return new Proxy(
-    {},
-    {
-      get: (_, key: string) => {
-        // Nếu giá trị là object, tiếp tục đệ quy
-        const nestedKeyType = {} as TDto[keyof TDto];
-        return isObject(nestedKeyType) ? buildSelect() : true;
-      }
+type SelectShape<T extends z.ZodTypeAny> =
+  T extends z.ZodObject<infer Shape>
+    ? { [K in keyof Shape]: Shape[K] extends z.ZodObject<any> ? { select: SelectShape<Shape[K]> } : true }
+    : never;
+export function buildSelect<T extends z.ZodObject<any>>(schema: T): SelectShape<T> {
+  const shape = schema._def.shape(); // Lấy cấu trúc của schema
+
+  const select = Object.entries(shape).reduce((acc, [key, value]) => {
+    if (value instanceof z.ZodObject) {
+      acc[key] = { select: buildSelect(value) }; // Đệ quy xử lý schema con
+    } else {
+      acc[key] = true; // Gán true cho các key thông thường
     }
-  ) as Record<keyof TDto, any>;
+    return acc;
+  }, {} as any);
+
+  return select;
 }

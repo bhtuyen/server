@@ -65,7 +65,8 @@ Table DishGroup {
 }
 
 Table Table {
-  number String [pk]
+  id String [pk]
+  number String [unique, not null]
   capacity Int [not null]
   orders Order [not null]
   guests Guest [not null]

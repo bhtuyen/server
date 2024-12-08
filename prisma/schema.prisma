@@ -77,7 +77,8 @@ model DishGroup {
 }
 
 model Table {
-  number    String      @id @db.VarChar(50)
+  id        String      @id @default(uuid()) @db.Char(36)
+  number    String      @unique @db.VarChar(50)
   capacity  Int
   orders    Order[]
   guests    Guest[]
@@ -88,7 +89,7 @@ model Table {
 }
 
 model Order {
-  id             String       @id @default(uuid())
+  id             String       @id @default(uuid()) @db.Char(36)
   guestId        String       @db.Char(36)
   guest          Guest        @relation(fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   table          Table        @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: NoAction)
