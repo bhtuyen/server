@@ -215,7 +215,8 @@ class GuestController {
               quantity: order.quantity,
               tableNumber: guest.tableNumber,
               orderHandlerId: null,
-              status: OrderStatus.Pending
+              status: OrderStatus.Pending,
+              options: order.options
             },
             select: selectOrderDtoDetail
           });

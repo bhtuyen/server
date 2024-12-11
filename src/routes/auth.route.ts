@@ -52,7 +52,6 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
     },
     async (request, reply) => {
       const { body } = request;
-      console.log(body);
       const { accessToken, refreshToken, account } = await authController.login(body);
       reply.send({
         message: 'Đăng nhập thành công',

@@ -41,19 +41,12 @@ export const orderDto = order;
 
 export type OrderDto = z.TypeOf<typeof orderDto>;
 
-export const orderDtoDetail = orderDto
-  .extend({
-    guest: guestDto,
-    table: tableDto,
-    orderHandler: accountDto.nullable(),
-    dishSnapshot: dishSnapshotDto
-  })
-  .omit({
-    guestId: true,
-    tableNumber: true,
-    orderHandlerId: true,
-    dishSnapshotId: true
-  });
+export const orderDtoDetail = orderDto.extend({
+  guest: guestDto,
+  table: tableDto,
+  orderHandler: accountDto.nullable(),
+  dishSnapshot: dishSnapshotDto
+});
 
 export type OrderDtoDetail = z.TypeOf<typeof orderDtoDetail>;
 
