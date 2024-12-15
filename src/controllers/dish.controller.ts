@@ -1,11 +1,15 @@
+import { RowMode } from '@/constants/enum';
 import prisma from '@/database';
 import {
+  CreateDishCombo,
+  DishCombo,
+  selectDishDtoComboDetail,
   selectDishDtoDetail,
   selectDishGroupDto,
-  type CreateDish,
-  type CreateDishGroup,
-  type UpdateDish
+  UpdateDishCombo,
+  type CreateDishGroup
 } from '@/schemaValidations/dish.schema';
+import { DishCategory } from '@prisma/client';
 
 class DishController {
   /**
@@ -23,6 +27,34 @@ class DishController {
   };
 
   /**
+   * @description Get dishes by category
+   * @param category
+   * @returns
+   * @buihuytuyen
+   */
+  getToChoose = async ({ category, ignores = [] }: { category: DishCategory; ignores?: string[] }) => {
+    const dishes = await prisma.dish.findMany({
+      where: {
+        category,
+        NOT: {
+          id: {
+            in: ignores
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      select: selectDishDtoDetail
+    });
+
+    return dishes.map((dish) => ({
+      ...dish,
+      quantity: 1
+    }));
+  };
+
+  /**
    * @description Get dish by id
    * @param id
    * @returns
@@ -33,7 +65,7 @@ class DishController {
       where: {
         id
       },
-      select: selectDishDtoDetail
+      select: selectDishDtoComboDetail
     });
   };
 
@@ -43,11 +75,46 @@ class DishController {
    * @returns
    * @buihuytuyen
    */
-  createDish = (data: CreateDish) => {
-    return prisma.dish.create({
-      data,
-      select: selectDishDtoDetail
+  createDish = async ({ dishes, combos, ...data }: CreateDishCombo) => {
+    const { id } = await prisma.dish.create({
+      data
     });
+
+    let dishCombo: DishCombo[] = [];
+
+    switch (data.category) {
+      case DishCategory.Buffet:
+      case DishCategory.Paid:
+        if (combos.length > 0) {
+          dishCombo = combos.map<DishCombo>(({ comboId, quantity }) => {
+            return {
+              comboId,
+              quantity,
+              dishId: id
+            };
+          });
+        }
+        break;
+      case DishCategory.ComboBuffet:
+      case DishCategory.ComboPaid:
+        if (dishes.length > 0) {
+          dishCombo = dishes.map<DishCombo>(({ dishId, quantity }) => {
+            return {
+              dishId,
+              quantity,
+              comboId: id
+            };
+          });
+        }
+        break;
+    }
+    if (dishCombo.length > 0) {
+      await prisma.dishCombo.createMany({
+        data: dishCombo
+      });
+    }
+
+    return await this.getDish(id);
   };
 
   /**
@@ -57,13 +124,117 @@ class DishController {
    * @returns
    * @buihuytuyen
    */
-  updateDish = ({ id, ...data }: UpdateDish) => {
-    return prisma.dish.update({
+  updateDish = async ({ dishes, combos, id, ...data }: UpdateDishCombo) => {
+    const dishCombosInsert: DishCombo[] = [];
+    const dishCombosDelete: DishCombo[] = [];
+    const dishCombosUpdate: DishCombo[] = [];
+
+    switch (data.category) {
+      case DishCategory.Buffet:
+      case DishCategory.Paid:
+        combos.forEach(({ comboId, quantity, rowMode }) => {
+          switch (rowMode) {
+            case RowMode.Insert:
+              dishCombosInsert.push({
+                comboId,
+                quantity,
+                dishId: id
+              });
+              break;
+            case RowMode.Delete:
+              dishCombosDelete.push({
+                comboId,
+                quantity,
+                dishId: id
+              });
+              break;
+            case RowMode.Update:
+              dishCombosUpdate.push({
+                comboId,
+                quantity,
+                dishId: id
+              });
+              break;
+          }
+        });
+        break;
+      case DishCategory.ComboBuffet:
+      case DishCategory.ComboPaid:
+        dishes.forEach(({ dishId, quantity, rowMode }) => {
+          switch (rowMode) {
+            case RowMode.Insert:
+              dishCombosInsert.push({
+                dishId,
+                quantity,
+                comboId: id
+              });
+              break;
+            case RowMode.Delete:
+              dishCombosDelete.push({
+                dishId,
+                quantity,
+                comboId: id
+              });
+              break;
+            case RowMode.Update:
+              dishCombosUpdate.push({
+                dishId,
+                quantity,
+                comboId: id
+              });
+              break;
+          }
+        });
+        break;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const taskDeleteMany = dishCombosDelete.map(({ comboId, dishId }) =>
+        prisma.dishCombo.delete({
+          where: {
+            dishId_comboId: {
+              comboId,
+              dishId
+            }
+          }
+        })
+      );
+
+      await Promise.all(taskDeleteMany);
+
+      const taskUpdate = prisma.dish.update({
+        where: {
+          id
+        },
+        data
+      });
+
+      const taskCreateMany = prisma.dishCombo.createMany({
+        data: dishCombosInsert
+      });
+
+      const updateManyTask = dishCombosUpdate.map(({ comboId, dishId, quantity }) =>
+        prisma.dishCombo.update({
+          where: {
+            dishId_comboId: {
+              comboId,
+              dishId
+            }
+          },
+          data: {
+            quantity
+          }
+        })
+      );
+
+      await Promise.all([taskUpdate, taskCreateMany, ...updateManyTask]);
+    });
+
+    return await prisma.dish.findFirstOrThrow({
       where: {
         id
       },
-      data,
-      select: selectDishDtoDetail
+      select: selectDishDtoComboDetail
     });
   };
 

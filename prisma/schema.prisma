@@ -15,122 +15,171 @@ datasource db {
 }
 
 model Account {
-  id           String         @id @default(uuid()) @db.Char(36)
-  name         String         @db.VarChar(255)
-  email        String         @unique @db.VarChar(255)
-  password     String         @db.VarChar(255)
-  avatar       String?        @db.VarChar(255)
-  role         Role           @default(Employee)
-  phone        String         @db.VarChar(50)
-  orders       Order[]
-  employees    Account[]      @relation("OwnerEmployee")
-  owner        Account?       @relation("OwnerEmployee", fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  ownerId      String?        @db.Char(36)
-  isVerified   Boolean        @default(false)
+  id         String   @id @default(uuid()) @map("account_id") @db.Char(36)
+  name       String   @db.VarChar(255)
+  email      String   @unique @db.VarChar(255)
+  password   String   @db.VarChar(255)
+  avatar     String?  @db.VarChar(255)
+  role       Role     @default(Employee)
+  phone      String   @db.VarChar(50)
+  isVerified Boolean  @default(false) @map("is_verified")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  employees Account[] @relation("OwnerEmployee")
+
+  owner   Account? @relation("OwnerEmployee", fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  ownerId String?  @map("owner_id") @db.Char(36)
+
+  orders Order[]
+
   refreshToken RefreshToken[]
-  sockets      Socket[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+
+  sockets Socket[]
+
+  @@map("account")
 }
 
 model Dish {
-  id            String         @id @default(uuid()) @db.Char(36)
-  name          String         @db.VarChar(255)
-  price         Decimal?       @db.Decimal(10, 4)
-  description   String?        @db.Text
-  image         String?        @db.VarChar(255)
-  status        DishStatus     @default(Available)
-  category      DishCategory   @default(Paid)
-  options       String?        @db.Text
-  dishSnapshots DishSnapshot[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  group         DishGroup      @relation(fields: [groupId], references: [id])
-  groupId       String         @db.Char(36)
-}
-
-model DishSnapshot {
-  id          String       @id @default(uuid()) @db.Char(36)
-  name        String       @db.VarChar(255)
-  price       Decimal?     @db.Decimal(10, 4)
+  id          String       @id @default(uuid()) @map("dish_id") @db.Char(36)
+  name        String       @map("dish_name") @db.VarChar(255)
+  price       Decimal?     @db.Decimal(18, 4)
   description String?      @db.Text
   image       String?      @db.VarChar(255)
   status      DishStatus   @default(Available)
   category    DishCategory @default(Paid)
   options     String?      @db.Text
-  dishId      String       @db.Char(36)
-  dish        Dish         @relation(fields: [dishId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  updatedAt   DateTime     @updatedAt
-  createdAt   DateTime     @default(now())
-  order       Order?
-  group       DishGroup    @relation(fields: [groupId], references: [id])
-  groupId     String       @db.Char(36)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  groupId String    @map("group_id") @db.Char(36)
+  group   DishGroup @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  dishSnapshots DishSnapshot[]
+
+  dishes DishCombo[] @relation("Combo")
+  combos DishCombo[] @relation("Dish")
+
+  @@map("dish")
+}
+
+model DishSnapshot {
+  id          String       @id @default(uuid()) @map("snapshot_id") @db.Char(36)
+  name        String       @db.VarChar(255)
+  price       Decimal?     @db.Decimal(18, 4)
+  description String?      @db.Text
+  image       String?      @db.VarChar(255)
+  status      DishStatus   @default(Available)
+  category    DishCategory @default(Paid)
+  options     String?      @db.Text
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  order  Order?
+  dishId String @map("dish_id") @db.Char(36)
+  dish   Dish   @relation(fields: [dishId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("dish_snapshot")
+}
+
+model DishCombo {
+  dishId   String @map("dish_id") @db.Char(36)
+  comboId  String @map("combo_id") @db.Char(36)
+  quantity Int    @default(1)
+
+  dish  Dish @relation("Dish", fields: [dishId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  combo Dish @relation("Combo", fields: [comboId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([dishId, comboId])
+  @@map("dish_combo")
 }
 
 model DishGroup {
-  id           String         @id @default(uuid()) @db.Char(36)
-  name         String         @unique @db.VarChar(255)
-  dishes       Dish[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  DishSnapshot DishSnapshot[]
+  id        String   @id @default(uuid()) @map("group_id") @db.Char(36)
+  name      String   @unique @map("group_name") @db.VarChar(255)
+  dishes    Dish[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("dish_group")
 }
 
 model Table {
-  id        String      @id @default(uuid()) @db.Char(36)
-  number    String      @unique @db.VarChar(50)
-  capacity  Int
-  orders    Order[]
-  guests    Guest[]
+  id        String      @id @default(uuid()) @map("table_id") @db.Char(36)
+  number    String      @unique @map("table_number") @db.VarChar(50)
+  capacity  Int         @default(1)
   status    TableStatus @default(Available)
   token     String      @db.VarChar(255)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  orders Order[]
+  guests Guest[]
+
+  @@map("table")
 }
 
 model Order {
-  id             String       @id @default(uuid()) @db.Char(36)
-  guestId        String       @db.Char(36)
-  guest          Guest        @relation(fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  table          Table        @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: NoAction)
-  tableNumber    String       @db.VarChar(50)
+  id        String      @id @default(uuid()) @map("order_id") @db.Char(36)
+  options   String?     @db.Text
+  quantity  Int
+  status    OrderStatus @default(Pending)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  guestId String @map("guest_id") @db.Char(36)
+  guest   Guest  @relation(fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  table       Table  @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: Cascade)
+  tableNumber String @map("table_number") @db.VarChar(50)
+
+  orderHandlerId String?  @map("order_handler_id") @db.Char(36)
+  orderHandler   Account? @relation(fields: [orderHandlerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  dishSnapshotId String       @unique @map("dish_snapshot_id") @db.Char(36)
   dishSnapshot   DishSnapshot @relation(fields: [dishSnapshotId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  dishSnapshotId String       @unique @db.Char(36)
-  options        String?      @db.Text
-  quantity       Int
-  orderHandler   Account?     @relation(fields: [orderHandlerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  orderHandlerId String?      @db.Char(36)
-  status         OrderStatus  @default(Pending)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+
+  @@map("order")
 }
 
 model RefreshToken {
   token     String   @id @db.VarChar(255)
-  accountId String   @db.Char(36)
-  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  accountId String  @map("account_id") @db.Char(36)
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("refresh_token")
 }
 
 model Guest {
-  id                    String    @id @default(uuid()) @db.Char(36)
-  table                 Table     @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: Cascade)
-  tableNumber           String    @db.VarChar(50)
-  orders                Order[]
-  refreshToken          String?   @db.VarChar(255)
-  refreshTokenExpiresAt DateTime?
-  sockets               Socket[]
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id           String    @id @default(uuid()) @map("guest_id") @db.Char(36)
+  refreshToken String?   @unique @map("refresh_token") @db.VarChar(255)
+  expiredAt    DateTime? @map("expired_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  tableNumber String @map("table_number") @db.VarChar(50)
+  table       Table  @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: Cascade)
+
+  orders Order[]
+
+  sockets Socket[]
+
+  @@map("guest")
 }
 
 model Socket {
-  socketId  String   @id @default(uuid()) @db.Char(36)
-  accountId String?  @unique @db.Char(36)
+  socketId String @id @default(uuid()) @map("socket_id") @db.Char(36)
+
+  guestId String? @unique @map("guest_id") @db.Char(36)
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  accountId String?  @unique @map("account_id") @db.Char(36)
   account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  guestId   String?  @unique @db.Char(36)
-  guest     Guest?   @relation(fields: [guestId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@map("socket")
 }
 
 enum DishStatus {
@@ -142,6 +191,8 @@ enum DishStatus {
 enum DishCategory {
   Buffet
   Paid
+  ComboBuffet
+  ComboPaid
 }
 
 enum Role {

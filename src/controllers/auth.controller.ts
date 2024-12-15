@@ -57,13 +57,13 @@ class AuthController {
       role: account.role
     });
     const decodedRefreshToken = verifyRefreshToken(refreshToken);
-    const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
+    const expiresAt = new Date(decodedRefreshToken.exp * 1000);
 
     await prisma.refreshToken.create({
       data: {
         accountId: account.id,
         token: refreshToken,
-        expiresAt: refreshTokenExpiresAt
+        expiresAt
       }
     });
     return {
@@ -152,13 +152,7 @@ class AuthController {
    * @returns {Object} - Đối tượng chứa thông tin người dùng từ Google.
    * @buihuytuyen
    */
-  getGoogleUser = async ({
-    id_token,
-    access_token
-  }: {
-    id_token: string;
-    access_token: string;
-  }): Promise<OauthGoogleProfile> => {
+  getGoogleUser = async ({ id_token, access_token }: { id_token: string; access_token: string }): Promise<OauthGoogleProfile> => {
     const { data } = await axios.get<OauthGoogleProfile>('https://www.googleapis.com/oauth2/v1/userinfo', {
       params: {
         access_token,
@@ -210,13 +204,13 @@ class AuthController {
     });
 
     const decodedRefreshToken = verifyRefreshToken(refreshToken);
-    const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
+    const expiresAt = new Date(decodedRefreshToken.exp * 1000);
 
     await prisma.refreshToken.create({
       data: {
         accountId: account.id,
         token: refreshToken,
-        expiresAt: refreshTokenExpiresAt
+        expiresAt
       }
     });
 

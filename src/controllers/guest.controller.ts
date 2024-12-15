@@ -61,7 +61,7 @@ class GuestController {
       }
     );
     const decodedRefreshToken = verifyRefreshToken(refreshToken);
-    const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
+    const expiredAt = new Date(decodedRefreshToken.exp * 1000);
 
     await prisma.guest.update({
       where: {
@@ -69,7 +69,7 @@ class GuestController {
       },
       data: {
         refreshToken,
-        refreshTokenExpiresAt
+        expiredAt
       }
     });
 
@@ -93,7 +93,7 @@ class GuestController {
       },
       data: {
         refreshToken: null,
-        refreshTokenExpiresAt: null
+        expiredAt: null
       }
     });
     return 'Đăng xuất thành công';
@@ -132,7 +132,7 @@ class GuestController {
       },
       data: {
         refreshToken: newRefreshToken,
-        refreshTokenExpiresAt: new Date(decodedRefreshToken.exp * 1000)
+        expiredAt: new Date(decodedRefreshToken.exp * 1000)
       }
     });
 
@@ -201,7 +201,6 @@ class GuestController {
               image: dish.image,
               name: dish.name,
               category: dish.category,
-              groupId: dish.groupId,
               options: dish.options,
               price: dish.price,
               dishId: dish.id,

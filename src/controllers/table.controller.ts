@@ -93,7 +93,7 @@ class TableController {
             },
             data: {
               refreshToken: null,
-              refreshTokenExpiresAt: null
+              expiredAt: null
             }
           })
         ]);

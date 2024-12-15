@@ -2,7 +2,7 @@
 //// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 //// ------------------------------------------------------
 
-Table Account {
+Table account {
   id String [pk]
   name String [not null]
   email String [unique, not null]
@@ -10,18 +10,18 @@ Table Account {
   avatar String
   role Role [not null, default: 'Employee']
   phone String [not null]
-  orders Order [not null]
-  employees Account [not null]
-  owner Account
-  ownerId String
   isVerified Boolean [not null, default: false]
-  refreshToken RefreshToken [not null]
-  sockets Socket [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  employees account [not null]
+  owner account
+  ownerId String
+  orders order [not null]
+  refreshToken refresh_token [not null]
+  sockets socket [not null]
 }
 
-Table Dish {
+Table dish {
   id String [pk]
   name String [not null]
   price Decimal
@@ -30,14 +30,16 @@ Table Dish {
   status DishStatus [not null, default: 'Available']
   category DishCategory [not null, default: 'Paid']
   options String
-  dishSnapshots DishSnapshot [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  group DishGroup [not null]
   groupId String [not null]
+  group dish_group [not null]
+  dishSnapshots dish_snapshot [not null]
+  dishes dish_combo [not null]
+  combos dish_combo [not null]
 }
 
-Table DishSnapshot {
+Table dish_snapshot {
   id String [pk]
   name String [not null]
   price Decimal
@@ -46,79 +48,88 @@ Table DishSnapshot {
   status DishStatus [not null, default: 'Available']
   category DishCategory [not null, default: 'Paid']
   options String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  order order
   dishId String [not null]
-  dish Dish [not null]
-  updatedAt DateTime [not null]
-  createdAt DateTime [default: `now()`, not null]
-  order Order
-  group DishGroup [not null]
-  groupId String [not null]
+  dish dish [not null]
 }
 
-Table DishGroup {
+Table dish_combo {
+  dishId String [not null]
+  comboId String [not null]
+  quantity Int [not null, default: 1]
+  dish dish [not null]
+  combo dish [not null]
+
+  indexes {
+    (dishId, comboId) [unique]
+  }
+}
+
+Table dish_group {
   id String [pk]
   name String [unique, not null]
-  dishes Dish [not null]
+  dishes dish [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  DishSnapshot DishSnapshot [not null]
 }
 
-Table Table {
+Table table {
   id String [pk]
   number String [unique, not null]
-  capacity Int [not null]
-  orders Order [not null]
-  guests Guest [not null]
+  capacity Int [not null, default: 1]
   status TableStatus [not null, default: 'Available']
   token String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  orders order [not null]
+  guests guest [not null]
 }
 
-Table Order {
+Table order {
   id String [pk]
-  guestId String [not null]
-  guest Guest [not null]
-  table Table [not null]
-  tableNumber String [not null]
-  dishSnapshot DishSnapshot [not null]
-  dishSnapshotId String [unique, not null]
   options String
   quantity Int [not null]
-  orderHandler Account
-  orderHandlerId String
   status OrderStatus [not null, default: 'Pending']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  guestId String [not null]
+  guest guest [not null]
+  table table [not null]
+  tableNumber String [not null]
+  orderHandlerId String
+  orderHandler account
+  dishSnapshotId String [unique, not null]
+  dishSnapshot dish_snapshot [not null]
 }
 
-Table RefreshToken {
+Table refresh_token {
   token String [pk]
-  accountId String [not null]
-  account Account [not null]
   expiresAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
+  accountId String [not null]
+  account account [not null]
 }
 
-Table Guest {
+Table guest {
   id String [pk]
-  table Table [not null]
-  tableNumber String [not null]
-  orders Order [not null]
-  refreshToken String
-  refreshTokenExpiresAt DateTime
-  sockets Socket [not null]
+  refreshToken String [unique]
+  expiredAt DateTime
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  tableNumber String [not null]
+  table table [not null]
+  orders order [not null]
+  sockets socket [not null]
 }
 
-Table Socket {
+Table socket {
   socketId String [pk]
-  accountId String [unique]
-  account Account
   guestId String [unique]
-  guest Guest
+  guest guest
+  accountId String [unique]
+  account account
 }
 
 Enum DishStatus {
@@ -130,6 +141,8 @@ Enum DishStatus {
 Enum DishCategory {
   Buffet
   Paid
+  ComboBuffet
+  ComboPaid
 }
 
 Enum Role {
@@ -152,26 +165,28 @@ Enum OrderStatus {
   Paid
 }
 
-Ref: Account.ownerId > Account.id
+Ref: account.ownerId > account.id
 
-Ref: Dish.groupId > DishGroup.id
+Ref: dish.groupId > dish_group.id [delete: No Action]
 
-Ref: DishSnapshot.dishId > Dish.id [delete: No Action]
+Ref: dish_snapshot.dishId > dish.id [delete: No Action]
 
-Ref: DishSnapshot.groupId > DishGroup.id
+Ref: dish_combo.dishId > dish.id [delete: Cascade]
 
-Ref: Order.guestId > Guest.id [delete: No Action]
+Ref: dish_combo.comboId > dish.id [delete: Cascade]
 
-Ref: Order.tableNumber > Table.number [delete: No Action]
+Ref: order.guestId > guest.id [delete: No Action]
 
-Ref: Order.dishSnapshotId - DishSnapshot.id [delete: Cascade]
+Ref: order.tableNumber > table.number [delete: No Action]
 
-Ref: Order.orderHandlerId > Account.id [delete: Set Null]
+Ref: order.orderHandlerId > account.id [delete: Set Null]
 
-Ref: RefreshToken.accountId > Account.id [delete: Cascade]
+Ref: order.dishSnapshotId - dish_snapshot.id [delete: Cascade]
 
-Ref: Guest.tableNumber > Table.number [delete: No Action]
+Ref: refresh_token.accountId > account.id [delete: Cascade]
 
-Ref: Socket.accountId > Account.id [delete: Set Null]
+Ref: guest.tableNumber > table.number [delete: No Action]
 
-Ref: Socket.guestId > Guest.id [delete: Set Null]
+Ref: socket.guestId > guest.id [delete: Set Null]
+
+Ref: socket.accountId > account.id [delete: Set Null]

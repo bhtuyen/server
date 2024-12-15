@@ -12,7 +12,7 @@ const order = z
     tableNumber: z.string().trim().min(1).max(50),
     dishSnapshotId: z.string().uuid(),
     options: z.string().nullable().default(null),
-    quantity: z.number().min(1).max(20),
+    quantity: z.number().int().min(1).max(20),
     orderHandlerId: z.string().uuid().nullable(),
     status: z.nativeEnum(OrderStatus)
   })
@@ -26,7 +26,7 @@ const guest = z
   .object({
     tableNumber: z.string().trim().min(1).max(50),
     refreshToken: z.string().nullable(),
-    refreshTokenExpiresAt: z.date().nullable()
+    expiredAt: z.date().nullable()
   })
   .merge(updateAndCreate)
   .merge(id);

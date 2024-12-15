@@ -1,13 +1,7 @@
 import envConfig from '@/config';
 import { PrismaErrorCode } from '@/constants/error-reference';
 import prisma from '@/database';
-import {
-  selectAccountDto,
-  type ChangePassword,
-  type CreateEmployee,
-  type UpdateEmployee,
-  type UpdateMe
-} from '@/schemaValidations/account.schema';
+import { selectAccountDto, type ChangePassword, type CreateEmployee, type UpdateEmployee, type UpdateMe } from '@/schemaValidations/account.schema';
 import type { MakeOptional } from '@/types/utils.type';
 import { comparePassword, hashPassword } from '@/utils/crypto';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
@@ -34,11 +28,7 @@ class AccountController {
         }
       });
       const chalk = await getChalk();
-      console.log(
-        chalk.bgCyan(
-          `Khởi tạo tài khoản chủ quán thành công: ${envConfig.INITIAL_EMAIL_OWNER}|${envConfig.INITIAL_PASSWORD_OWNER}`
-        )
-      );
+      console.log(chalk.bgCyan(`Khởi tạo tài khoản chủ quán thành công: ${envConfig.INITIAL_EMAIL_OWNER}|${envConfig.INITIAL_PASSWORD_OWNER}`));
     }
   };
 
@@ -298,12 +288,12 @@ class AccountController {
       role: account.role
     });
     const decodedRefreshToken = verifyRefreshToken(refreshToken);
-    const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
+    const expiresAt = new Date(decodedRefreshToken.exp * 1000);
     await prisma.refreshToken.create({
       data: {
         accountId: account.id,
         token: refreshToken,
-        expiresAt: refreshTokenExpiresAt
+        expiresAt
       }
     });
     return {

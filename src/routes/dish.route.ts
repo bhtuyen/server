@@ -1,8 +1,30 @@
 import dishController from '@/controllers/dish.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import type { IdParam } from '@/schemaValidations/common.schema';
-import type { CreateDish, CreateDishGroup, DishesRes, DishGroupRes, DishGroupsRes, DishRes, UpdateDish } from '@/schemaValidations/dish.schema';
-import { createDish, createDishGroup, dishesRes, dishGroupRes, dishGroupsRes, dishParams, dishRes, updateDish } from '@/schemaValidations/dish.schema';
+import { idParam, type IdParam } from '@/schemaValidations/common.schema';
+import type {
+  CreateDishCombo,
+  CreateDishGroup,
+  DishDtoComboDetailRes,
+  DishDtoDetailChooseRes,
+  DishesRes,
+  DishGroupRes,
+  DishGroupsRes,
+  DishRes,
+  DishToChoose,
+  UpdateDishCombo
+} from '@/schemaValidations/dish.schema';
+import {
+  createDishCombo,
+  createDishGroup,
+  dishDtoComboDetailRes,
+  dishDtoDetailChooseRes,
+  dishesRes,
+  dishGroupRes,
+  dishGroupsRes,
+  dishRes,
+  dishToChoose,
+  updateDishCombo
+} from '@/schemaValidations/dish.schema';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 export default async function dishRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
@@ -21,8 +43,35 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
         }
       }
     },
-    async (request, reply) => {
+    async (_, reply) => {
       const data = await dishController.getDishes();
+
+      reply.send({
+        data,
+        message: 'Lấy danh sách món ăn thành công!'
+      });
+    }
+  );
+
+  /**
+   * @description Get dishes by category
+   * @buihuytuyen
+   */
+  fastify.post<{
+    Body: DishToChoose;
+    Reply: DishDtoDetailChooseRes;
+  }>(
+    '/choose',
+    {
+      schema: {
+        body: dishToChoose,
+        response: {
+          200: dishDtoDetailChooseRes
+        }
+      }
+    },
+    async (request, reply) => {
+      const data = await dishController.getToChoose(request.body);
 
       reply.send({
         data,
@@ -37,14 +86,14 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
    */
   fastify.get<{
     Params: IdParam;
-    Reply: DishRes;
+    Reply: DishDtoComboDetailRes;
   }>(
     '/:id',
     {
       schema: {
-        params: dishParams,
+        params: idParam,
         response: {
-          200: dishRes
+          200: dishDtoComboDetailRes
         }
       }
     },
@@ -63,15 +112,15 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
    * @buihuytuyen
    */
   fastify.post<{
-    Body: CreateDish;
-    Reply: DishRes;
+    Body: CreateDishCombo;
+    Reply: DishDtoComboDetailRes;
   }>(
     '',
     {
       schema: {
-        body: createDish,
+        body: createDishCombo,
         response: {
-          200: dishRes
+          200: dishDtoComboDetailRes
         }
       },
       // Login AND (Owner OR Employee)
@@ -80,6 +129,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       })
     },
     async (request, reply) => {
+      console.log(request.body);
       const data = await dishController.createDish(request.body);
 
       reply.send({
@@ -95,16 +145,16 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
    */
   fastify.put<{
     Params: IdParam;
-    Body: UpdateDish;
-    Reply: DishRes;
+    Body: UpdateDishCombo;
+    Reply: DishDtoComboDetailRes;
   }>(
     '/:id',
     {
       schema: {
-        params: dishParams,
-        body: updateDish,
+        params: idParam,
+        body: updateDishCombo,
         response: {
-          200: dishRes
+          200: dishDtoComboDetailRes
         }
       },
       preValidation: fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
@@ -131,7 +181,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
     '/:id',
     {
       schema: {
-        params: dishParams,
+        params: idParam,
         response: {
           200: dishRes
         }
@@ -164,7 +214,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
         }
       }
     },
-    async (request, reply) => {
+    async (_, reply) => {
       const dishCaregories = await dishController.getDishGroupList();
       reply.send({
         data: dishCaregories,

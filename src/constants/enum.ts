@@ -4,3 +4,10 @@ export enum Token {
   RefreshToken = 'RefreshToken',
   TableToken = 'TableToken'
 }
+
+export enum RowMode {
+  None,
+  Insert,
+  Update,
+  Delete
+}

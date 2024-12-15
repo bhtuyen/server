@@ -51,7 +51,6 @@ class OrderController {
                 name: dish.name,
                 price: dish.price,
                 category: dish.category,
-                groupId: dish.groupId,
                 options: dish.options,
                 dishId: dish.id,
                 status: dish.status
@@ -215,7 +214,6 @@ class OrderController {
             image: dish.image,
             name: dish.name,
             category: dish.category,
-            groupId: dish.groupId,
             options: dish.options,
             price: dish.price,
             dishId: dish.id,
