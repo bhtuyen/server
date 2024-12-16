@@ -1,10 +1,12 @@
-import envConfig, { API_URL } from '@/config';
-import { randomId } from '@/utils/helpers';
-import type { MultipartFile } from '@fastify/multipart';
 import fs from 'fs';
 import path from 'path';
 import { pipeline } from 'stream';
 import util from 'util';
+
+import type { MultipartFile } from '@fastify/multipart';
+
+import envConfig, { API_URL } from '@/config';
+import { randomId } from '@/utils/helpers';
 const pump = util.promisify(pipeline);
 
 class MediaController {

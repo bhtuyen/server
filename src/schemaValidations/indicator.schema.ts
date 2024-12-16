@@ -1,6 +1,7 @@
+import z from 'zod';
+
 import { buildReply } from '@/schemaValidations/common.schema';
 import { dishDtoDetail } from '@/schemaValidations/dish.schema';
-import z from 'zod';
 
 export const dishIndicator = dishDtoDetail.extend({ successOrders: z.number() });
 

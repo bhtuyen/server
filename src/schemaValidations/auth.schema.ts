@@ -1,6 +1,7 @@
+import z from 'zod';
+
 import { accountDto } from '@/schemaValidations/account.schema';
 import { buildReply } from '@/schemaValidations/common.schema';
-import z from 'zod';
 
 export const token = z
   .object({

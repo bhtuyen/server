@@ -1,7 +1,9 @@
+import { Role } from '@prisma/client';
+
+import type { FastifyRequest } from 'fastify';
+
 import { AuthError } from '@/utils/errors';
 import { verifyAccessToken } from '@/utils/jwt';
-import { Role } from '@prisma/client';
-import type { FastifyRequest } from 'fastify';
 
 export const pauseApiHook = async (request: FastifyRequest) => {
   // throw new ForbiddenError('Chức năng bị tạm ngưng')
@@ -13,7 +15,7 @@ export const requireLoginedHook = async (request: FastifyRequest) => {
   try {
     const decodedAccessToken = verifyAccessToken(accessToken);
     request.decodedAccessToken = decodedAccessToken;
-  } catch (error) {
+  } catch {
     throw new AuthError('Access token không hợp lệ');
   }
 };

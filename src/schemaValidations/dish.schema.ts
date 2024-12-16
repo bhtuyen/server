@@ -1,8 +1,9 @@
+import { DishCategory, DishStatus, Prisma } from '@prisma/client';
+import z from 'zod';
+
 import { RowMode } from '@/constants/enum';
 import { buildReply, id, name, updateAndCreate } from '@/schemaValidations/common.schema';
 import { buildSelect } from '@/utils/helpers';
-import { DishCategory, DishStatus, Prisma } from '@prisma/client';
-import z from 'zod';
 
 /**
  * updateMeSchema

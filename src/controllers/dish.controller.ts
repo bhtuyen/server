@@ -1,15 +1,10 @@
+import { DishCategory } from '@prisma/client';
+
+import type { CreateDishCombo, DishCombo, UpdateDishCombo, CreateDishGroup } from '@/schemaValidations/dish.schema';
+
 import { RowMode } from '@/constants/enum';
 import prisma from '@/database';
-import {
-  CreateDishCombo,
-  DishCombo,
-  selectDishDtoComboDetail,
-  selectDishDtoDetail,
-  selectDishGroupDto,
-  UpdateDishCombo,
-  type CreateDishGroup
-} from '@/schemaValidations/dish.schema';
-import { DishCategory } from '@prisma/client';
+import { selectDishDtoComboDetail, selectDishDtoDetail, selectDishGroupDto } from '@/schemaValidations/dish.schema';
 
 class DishController {
   /**

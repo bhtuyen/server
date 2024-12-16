@@ -19,7 +19,11 @@ export const getChalk = async () => {
 type SelectShape<T extends z.ZodTypeAny> =
   T extends z.ZodObject<infer Shape>
     ? {
-        [K in keyof Shape]: Shape[K] extends z.ZodObject<any> ? { select: SelectShape<Shape[K]> } : Shape[K] extends z.ZodArray<infer ArrayType> ? { select: SelectShape<ArrayType> } : true;
+        [K in keyof Shape]: Shape[K] extends z.ZodObject<any>
+          ? { select: SelectShape<Shape[K]> }
+          : Shape[K] extends z.ZodArray<infer ArrayType>
+            ? { select: SelectShape<ArrayType> }
+            : true;
       }
     : never;
 

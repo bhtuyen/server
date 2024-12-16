@@ -1,13 +1,15 @@
-import envConfig from '@/config';
-import prisma from '@/database';
-import { selectAccountDto } from '@/schemaValidations/account.schema';
+import axios, { HttpStatusCode } from 'axios';
+
 import type { Login } from '@/schemaValidations/auth.schema';
 import type { OauthGoogleProfile, OauthGoogleToken } from '@/types/google.types';
 import type { TokenPayload } from '@/types/jwt.types';
+
+import envConfig from '@/config';
+import prisma from '@/database';
+import { selectAccountDto } from '@/schemaValidations/account.schema';
 import { comparePassword } from '@/utils/crypto';
 import { AuthError, EntityError, StatusError } from '@/utils/errors';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
-import axios, { HttpStatusCode } from 'axios';
 
 class AuthController {
   /**
@@ -83,7 +85,7 @@ class AuthController {
     let decodedRefreshToken: TokenPayload;
     try {
       decodedRefreshToken = verifyRefreshToken(refreshToken);
-    } catch (error) {
+    } catch {
       throw new AuthError('Refresh token không hợp lệ');
     }
     const refreshTokenDoc = await prisma.refreshToken.findUniqueOrThrow({

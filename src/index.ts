@@ -1,12 +1,4 @@
 // Import the framework and instantiate it
-import envConfig, { API_URL } from '@/config';
-import accountController from '@/controllers/account.controller';
-import autoRemoveRefreshTokenJob from '@/jobs/autoRemoveRefreshToken.job';
-import { errorHandlerPlugin } from '@/plugins/errorHandler.plugins';
-import { socketPlugin } from '@/plugins/socket.plugins';
-import validatorCompilerPlugin from '@/plugins/validatorCompiler.plugins';
-import { accountRoutes, authRoutes, dishRoutes, guestRoutes, indicatorRoutes, mediaRoutes, orderRoutes, staticRoutes, tablesRoutes, testRoutes } from '@/routes';
-import { createFolder } from '@/utils/helpers';
 import fastifyAuth from '@fastify/auth';
 import fastifyCookie from '@fastify/cookie';
 import cors from '@fastify/cors';
@@ -14,6 +6,15 @@ import fastifyHelmet from '@fastify/helmet';
 import Fastify from 'fastify';
 import fastifySocketIO from 'fastify-socket.io';
 import path from 'path';
+
+import envConfig, { API_URL } from '@/config';
+import accountController from '@/controllers/account.controller';
+import autoRemoveRefreshTokenJob from '@/jobs/autoRemoveRefreshToken.job';
+import { errorHandlerPlugin } from '@/plugins/errorHandler.plugins';
+import { socketPlugin } from '@/plugins/socket.plugins';
+import validatorCompilerPlugin from '@/plugins/validatorCompiler.plugins';
+import { accountRoutes, authRoutes, dishRoutes, guestRoutes, indicatorRoutes, mediaRoutes, orderRoutes, staticRoutes, tablesRoutes } from '@/routes';
+import { createFolder } from '@/utils/helpers';
 
 const fastify = Fastify({
   logger: false
@@ -63,15 +64,11 @@ const start = async () => {
     fastify.register(dishRoutes, {
       prefix: '/dishes'
     });
-
     fastify.register(tablesRoutes, {
       prefix: '/tables'
     });
     fastify.register(orderRoutes, {
       prefix: '/orders'
-    });
-    fastify.register(testRoutes, {
-      prefix: '/test'
     });
     fastify.register(guestRoutes, {
       prefix: '/guest'

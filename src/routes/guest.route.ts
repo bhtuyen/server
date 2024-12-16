@@ -1,15 +1,32 @@
+import type { Logout, RefreshToken, RefreshTokenRes } from '@/schemaValidations/auth.schema';
+import type { MessageRes, Period } from '@/schemaValidations/common.schema';
+import type {
+  CreateGuest,
+  CreateGuestRes,
+  GuestCreateOrderRes,
+  GuestCreateOrders,
+  GuestLogin,
+  GuestLoginRes,
+  GuestsRes
+} from '@/schemaValidations/guest.schema';
+import type { FastifyInstance } from 'fastify';
+
 import { ManagerRoom } from '@/constants/const';
 import guestController from '@/controllers/guest.controller';
 import { requireEmployeeHook, requireGuestHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import type { Logout, RefreshToken, RefreshTokenRes } from '@/schemaValidations/auth.schema';
 import { logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
-import type { MessageRes, Period } from '@/schemaValidations/common.schema';
 import { message, period } from '@/schemaValidations/common.schema';
-import type { CreateGuest, CreateGuestRes, GuestCreateOrderRes, GuestCreateOrders, GuestLogin, GuestLoginRes, GuestsRes } from '@/schemaValidations/guest.schema';
-import { createGuest, createGuestRes, guestCreateOrderRes, guestCreateOrders, guestLogin, guestLoginRes, guestsRes } from '@/schemaValidations/guest.schema';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import {
+  createGuest,
+  createGuestRes,
+  guestCreateOrderRes,
+  guestCreateOrders,
+  guestLogin,
+  guestLoginRes,
+  guestsRes
+} from '@/schemaValidations/guest.schema';
 
-export default async function guestRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+export default async function guestRoutes(fastify: FastifyInstance) {
   /**
    * @description Guest login
    * @buihuytuyen

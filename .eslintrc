@@ -1,11 +1,8 @@
 {
-  "root": true,
+  "extends": ["eslint-config-prettier", "eslint:recommended", "plugin:prettier/recommended", "prettier", "plugin:@typescript-eslint/recommended"],
+  "plugins": ["prettier", "import", "@typescript-eslint", "unused-imports"],
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "prettier"],
-  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:import/recommended", "eslint-config-prettier", "prettier"],
   "rules": {
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": "off",
     "prettier/prettier": [
       "warn",
       {
@@ -17,20 +14,67 @@
         "useTabs": false,
         "singleQuote": true,
         "printWidth": 150,
-        "jsxSingleQuote": true
+        "jsxSingleQuote": true,
+        "bracketSpacing": true
       }
     ],
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          // Group các import của hệ thống (builtin), external (package từ npm) riêng biệt.
+          ["builtin", "external"],
+          // Đặt các import kiểu (type imports) ở nhóm sau.
+          ["type"],
+          ["internal"],
+          ["sibling", "parent"],
+          "index"
+        ],
+        "alphabetize": {
+          "order": "asc" /* hoặc "desc" */,
+          "caseInsensitive": true
+        },
+        "newlines-between": "always" // Thêm dòng trống giữa các nhóm import
+      }
+    ],
+    // Đảm bảo rằng import kiểu (type) hoặc interface luôn phải dùng `import type`
     "@typescript-eslint/consistent-type-imports": [
       "error",
       {
-        "prefer": "type-imports",
-        "disallowTypeAnnotations": false
+        "prefer": "type-imports", // Yêu cầu sử dụng `import type`
+        "disallowTypeAnnotations": false // Cho phép sử dụng annotations kiểu trong khai báo
       }
     ],
-    "import/no-unresolved": ["error", { "commonjs": true, "amd": true }],
-    "import/named": "error",
-    "import/namespace": "error",
-    "import/default": "error",
-    "import/export": "error"
-  }
+    "unused-imports/no-unused-imports": "error", // Báo lỗi khi có import không sử dụng
+    "unused-imports/no-unused-vars": ["warn", { "vars": "all", "args": "none" }], // Cảnh báo về biến không sử dụng
+    "@typescript-eslint/no-explicit-any": "off",
+    // Quy tắc này bỏ qua cảnh báo cho các biến không sử dụng trong tham số hàm
+    "no-unused-vars": [
+      "warn",
+      {
+        "vars": "all", // Kiểm tra tất cả các biến (không giới hạn)
+        "args": "none", // Không cảnh báo đối với các tham số không được sử dụng trong hàm
+        "varsIgnorePattern": "^_" // Bỏ qua các biến bắt đầu bằng dấu gạch dưới (_)
+      }
+    ],
+
+    // Tùy chọn với @typescript-eslint cho TypeScript
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all", // Kiểm tra tất cả các biến (không giới hạn)
+        "args": "none", // Không cảnh báo đối với các tham số không được sử dụng trong hàm
+        "varsIgnorePattern": "^_" // Bỏ qua các biến bắt đầu bằng dấu gạch dưới (_)
+      }
+    ],
+    "@typescript-eslint/no-empty-object-type": "error" // Quy tắc mặc định
+  },
+  "overrides": [
+    {
+      "files": ["**/*.d.ts", "**/*.global.ts"], // Áp dụng cho các file khai báo global (.d.ts hoặc .global.ts)
+      "rules": {
+        "@typescript-eslint/no-empty-object-type": "off" // Tắt quy tắc trong các file khai báo global
+      }
+    }
+  ]
 }

@@ -1,6 +1,9 @@
-import prisma from '@/database';
-import { selectOrderDtoDetail, type CreateOrders, type UpdateOrder } from '@/schemaValidations/order.schema';
 import { DishStatus, OrderStatus, TableStatus } from '@prisma/client';
+
+import type { CreateOrders, UpdateOrder } from '@/schemaValidations/order.schema';
+
+import prisma from '@/database';
+import { selectOrderDtoDetail } from '@/schemaValidations/order.schema';
 
 class OrderController {
   /**

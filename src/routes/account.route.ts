@@ -1,28 +1,15 @@
+import type { AccountRes, AccountsRes, ChangePassword, CreateEmployee, UpdateEmployee, UpdateMe } from '@/schemaValidations/account.schema';
+import type { LoginRes } from '@/schemaValidations/auth.schema';
+import type { IdParam } from '@/schemaValidations/common.schema';
+import type { FastifyInstance } from 'fastify';
+
 import accountController from '@/controllers/account.controller';
 import { pauseApiHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import type {
-  AccountRes,
-  AccountsRes,
-  ChangePassword,
-  CreateEmployee,
-  UpdateEmployee,
-  UpdateMe
-} from '@/schemaValidations/account.schema';
-import {
-  accountRes,
-  accountsRes,
-  changePassword,
-  createEmployee,
-  updateEmployee,
-  updateMe
-} from '@/schemaValidations/account.schema';
-import type { LoginRes } from '@/schemaValidations/auth.schema';
+import { accountRes, accountsRes, changePassword, createEmployee, updateEmployee, updateMe } from '@/schemaValidations/account.schema';
 import { loginRes } from '@/schemaValidations/auth.schema';
-import type { IdParam } from '@/schemaValidations/common.schema';
 import { idParam } from '@/schemaValidations/common.schema';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
-export default async function accountRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+export default async function accountRoutes(fastify: FastifyInstance) {
   /**
    * @description Require logined hook
    * @buihuytuyen

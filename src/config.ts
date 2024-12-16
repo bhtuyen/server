@@ -55,14 +55,5 @@ if (!configServer.success) {
   throw new Error('Các giá trị khai báo trong file .env không hợp lệ');
 }
 const envConfig = configServer.data;
-export const API_URL = envConfig.PRODUCTION
-  ? envConfig.PRODUCTION_URL
-  : `${envConfig.PROTOCOL}://${envConfig.DOMAIN}:${envConfig.PORT}`;
+export const API_URL = envConfig.PRODUCTION ? envConfig.PRODUCTION_URL : `${envConfig.PROTOCOL}://${envConfig.DOMAIN}:${envConfig.PORT}`;
 export default envConfig;
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace NodeJS {
-    interface ProcessEnv extends z.infer<typeof configSchema> {}
-  }
-}

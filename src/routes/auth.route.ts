@@ -1,12 +1,14 @@
+import type { Login, LoginGoogle, LoginRes, Logout, RefreshToken, RefreshTokenRes } from '@/schemaValidations/auth.schema';
+import type { MessageRes } from '@/schemaValidations/common.schema';
+import type { FastifyInstance } from 'fastify';
+
 import envConfig from '@/config';
 import authController from '@/controllers/auth.controller';
 import { requireLoginedHook } from '@/hooks/auth.hooks';
-import type { Login, LoginGoogle, LoginRes, Logout, RefreshToken, RefreshTokenRes } from '@/schemaValidations/auth.schema';
 import { login, loginGoogle, loginRes, logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
-import type { MessageRes } from '@/schemaValidations/common.schema';
 import { message } from '@/schemaValidations/common.schema';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-export default async function authRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+
+export default async function authRoutes(fastify: FastifyInstance) {
   /**
    * @description Require logined hook
    * @buihuytuyen

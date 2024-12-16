@@ -1,14 +1,16 @@
+import { DishStatus, OrderStatus, Role, TableStatus } from '@prisma/client';
+import ms from 'ms';
+
+import type { Period } from '@/schemaValidations/common.schema';
+import type { TokenPayload } from '@/types/jwt.types';
+
 import envConfig from '@/config';
 import prisma from '@/database';
-import type { Period } from '@/schemaValidations/common.schema';
 import { selectDishDto } from '@/schemaValidations/dish.schema';
 import { selectGuestDto, type CreateGuest, type GuestCreateOrders, type GuestLogin } from '@/schemaValidations/guest.schema';
 import { selectOrderDtoDetail } from '@/schemaValidations/order.schema';
-import type { TokenPayload } from '@/types/jwt.types';
 import { AuthError } from '@/utils/errors';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
-import { DishStatus, OrderStatus, Role, TableStatus } from '@prisma/client';
-import ms from 'ms';
 
 class GuestController {
   /**
@@ -109,7 +111,7 @@ class GuestController {
     let decodedRefreshToken: TokenPayload;
     try {
       decodedRefreshToken = verifyRefreshToken(refreshToken);
-    } catch (error) {
+    } catch {
       throw new AuthError('Refresh token không hợp lệ');
     }
     const newRefreshToken = signRefreshToken({

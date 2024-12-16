@@ -1,13 +1,14 @@
+import type { IdParam, Period } from '@/schemaValidations/common.schema';
+import type { CreateOrders, GuestPayOrders, OrderDtoDetailRes, OrdersDtoDetailRes, UpdateOrder } from '@/schemaValidations/order.schema';
+import type { FastifyInstance } from 'fastify';
+
 import { ManagerRoom } from '@/constants/const';
 import orderController from '@/controllers/order.controller';
 import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import type { IdParam, Period } from '@/schemaValidations/common.schema';
 import { idParam, period } from '@/schemaValidations/common.schema';
-import type { CreateOrders, GuestPayOrders, OrderDtoDetailRes, OrdersDtoDetailRes, UpdateOrder } from '@/schemaValidations/order.schema';
 import { createOrders, guestPayOrders, orderDtoDetailRes, ordersDtoDetailRes, updateOrder } from '@/schemaValidations/order.schema';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
-export default async function orderRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+export default async function orderRoutes(fastify: FastifyInstance) {
   /**
    * @description Require logined hook, require owner or employee hook
    * @buihuytuyen

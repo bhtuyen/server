@@ -1,10 +1,11 @@
+import { OrderStatus } from '@prisma/client';
+import z from 'zod';
+
 import { accountDto } from '@/schemaValidations/account.schema';
 import { buildReply, id, updateAndCreate } from '@/schemaValidations/common.schema';
 import { dishSnapshotDto } from '@/schemaValidations/dish.schema';
 import { tableDto } from '@/schemaValidations/table.schema';
 import { buildSelect } from '@/utils/helpers';
-import { OrderStatus } from '@prisma/client';
-import z from 'zod';
 
 const order = z
   .object({

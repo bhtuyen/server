@@ -1,11 +1,13 @@
+import type { IdParam } from '@/schemaValidations/common.schema';
+import type { CreateTable, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
+import type { FastifyInstance } from 'fastify';
+
 import tableController from '@/controllers/table.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import { IdParam, idParam } from '@/schemaValidations/common.schema';
-import type { CreateTable, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
+import { idParam } from '@/schemaValidations/common.schema';
 import { createTable, tableRes, tablesRes, updateTable } from '@/schemaValidations/table.schema';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
-export default async function tablesRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+export default async function tablesRoutes(fastify: FastifyInstance) {
   /**
    * @description get tables
    * @buihuytuyen

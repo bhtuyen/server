@@ -1,11 +1,13 @@
+import fastifyMultipart from '@fastify/multipart';
+
+import type { UploadImageRes } from '@/schemaValidations/media.schema';
+import type { FastifyInstance } from 'fastify';
+
 import mediaController from '@/controllers/media.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import type { UploadImageRes } from '@/schemaValidations/media.schema';
 import { uploadImageRes } from '@/schemaValidations/media.schema';
-import fastifyMultipart from '@fastify/multipart';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
-export default async function mediaRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+export default async function mediaRoutes(fastify: FastifyInstance) {
   /**
    * @description register fastify-multipart
    * @buihuytuyen

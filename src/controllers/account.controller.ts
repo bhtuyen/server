@@ -1,13 +1,16 @@
+import { Role } from '@prisma/client';
+
+import type { ChangePassword, CreateEmployee, UpdateEmployee, UpdateMe } from '@/schemaValidations/account.schema';
+import type { MakeOptional } from '@/types/utils.type';
+
 import envConfig from '@/config';
 import { PrismaErrorCode } from '@/constants/error-reference';
 import prisma from '@/database';
-import { selectAccountDto, type ChangePassword, type CreateEmployee, type UpdateEmployee, type UpdateMe } from '@/schemaValidations/account.schema';
-import type { MakeOptional } from '@/types/utils.type';
+import { selectAccountDto } from '@/schemaValidations/account.schema';
 import { comparePassword, hashPassword } from '@/utils/crypto';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
 import { getChalk } from '@/utils/helpers';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
-import { Role } from '@prisma/client';
 
 class AccountController {
   /**

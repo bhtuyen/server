@@ -1,5 +1,7 @@
+import type { CreateTable, UpdateTable } from '@/schemaValidations/table.schema';
+
 import prisma from '@/database';
-import { selectTableDto, type CreateTable, type UpdateTable } from '@/schemaValidations/table.schema';
+import { selectTableDto } from '@/schemaValidations/table.schema';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
 import { randomId } from '@/utils/helpers';
 

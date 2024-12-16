@@ -5,6 +5,9 @@ declare global {
   interface BigInt {
     toJSON(): string;
   }
+  namespace NodeJS {
+    interface ProcessEnv extends z.infer<typeof configSchema> {}
+  }
 }
 
 declare module 'fastify' {

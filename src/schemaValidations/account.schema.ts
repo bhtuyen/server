@@ -1,7 +1,8 @@
-import { buildReply, id, name, updateAndCreate } from '@/schemaValidations/common.schema';
-import { buildSelect } from '@/utils/helpers';
 import { Role } from '@prisma/client';
 import z from 'zod';
+
+import { buildReply, id, name, updateAndCreate } from '@/schemaValidations/common.schema';
+import { buildSelect } from '@/utils/helpers';
 
 const account = z
   .object({

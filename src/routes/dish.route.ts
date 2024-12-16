@@ -1,6 +1,3 @@
-import dishController from '@/controllers/dish.controller';
-import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import { idParam, type IdParam } from '@/schemaValidations/common.schema';
 import type {
   CreateDishCombo,
   CreateDishGroup,
@@ -13,6 +10,11 @@ import type {
   DishToChoose,
   UpdateDishCombo
 } from '@/schemaValidations/dish.schema';
+import type { FastifyInstance } from 'fastify';
+
+import dishController from '@/controllers/dish.controller';
+import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
+import { idParam, type IdParam } from '@/schemaValidations/common.schema';
 import {
   createDishCombo,
   createDishGroup,
@@ -25,9 +27,8 @@ import {
   dishToChoose,
   updateDishCombo
 } from '@/schemaValidations/dish.schema';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
-export default async function dishRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+export default async function dishRoutes(fastify: FastifyInstance) {
   /**
    * @description Get dishes
    * @buihuytuyen

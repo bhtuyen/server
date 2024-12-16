@@ -1,9 +1,11 @@
-import envConfig from '@/config';
 import fastifyStatic from '@fastify/static';
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import path from 'path';
 
-export default async function staticRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+import type { FastifyInstance } from 'fastify';
+
+import envConfig from '@/config';
+
+export default async function staticRoutes(fastify: FastifyInstance) {
   /**
    * @description Serve static files
    * @buihuytuyen
