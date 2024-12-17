@@ -1,15 +1,13 @@
 import z from 'zod';
 
 export const message = z.object({
-  message: z.string().default('')
+  message: z.string()
 });
-
-export const messageRes = message.strict();
 
 export type MessageRes = z.TypeOf<typeof message>;
 
 export const create = z.object({
-  createdAt: z.date().default(new Date())
+  createdAt: z.date()
 });
 
 export const update = z.object({
@@ -31,7 +29,7 @@ export const name = z.object({
 });
 
 export const buildReply = <T>(data: z.ZodType<T>) => {
-  return message.merge(z.object({ data })).strict();
+  return message.merge(z.object({ data }));
 };
 
 export const period = z

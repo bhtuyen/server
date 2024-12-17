@@ -7,25 +7,10 @@ import { dishSnapshotDto } from '@/schemaValidations/dish.schema';
 import { tableDto } from '@/schemaValidations/table.schema';
 import { buildSelect } from '@/utils/helpers';
 
-const order = z
-  .object({
-    guestId: z.string().uuid(),
-    tableNumber: z.string().trim().min(1).max(50),
-    dishSnapshotId: z.string().uuid(),
-    options: z.string().nullable().default(null),
-    quantity: z.number().int().min(1).max(20),
-    orderHandlerId: z.string().uuid().nullable(),
-    status: z.nativeEnum(OrderStatus)
-  })
-  .merge(updateAndCreate)
-  .merge(id);
-
-/**
- * Guest schema
- */
 const guest = z
   .object({
     tableNumber: z.string().trim().min(1).max(50),
+    token: z.string(),
     refreshToken: z.string().nullable(),
     expiredAt: z.date().nullable()
   })
@@ -35,21 +20,36 @@ const guest = z
 export const guestDto = guest.pick({
   id: true,
   tableNumber: true,
+  token: true,
   createdAt: true
 });
 
+const order = z
+  .object({
+    guestId: z.string().uuid().nullable(),
+    tableNumber: z.string().trim().min(1).max(50),
+    token: z.string(),
+    dishSnapshotId: z.string().uuid(),
+    options: z.string().nullable(),
+    quantity: z.number().int().min(1).max(20),
+    orderHandlerId: z.string().uuid().nullable(),
+    status: z.nativeEnum(OrderStatus)
+  })
+  .merge(updateAndCreate)
+  .merge(id);
+
 export const orderDto = order;
 
-export type OrderDto = z.TypeOf<typeof orderDto>;
+export const tableNumberParam = orderDto.pick({
+  tableNumber: true
+});
 
 export const orderDtoDetail = orderDto.extend({
-  guest: guestDto,
+  guest: guestDto.nullable(),
   table: tableDto,
   orderHandler: accountDto.nullable(),
   dishSnapshot: dishSnapshotDto
 });
-
-export type OrderDtoDetail = z.TypeOf<typeof orderDtoDetail>;
 
 export const updateOrder = orderDto
   .pick({
@@ -63,40 +63,29 @@ export const updateOrder = orderDto
     z.object({
       dishId: z.string().uuid()
     })
+  );
+
+export const createOrders = z.object({
+  tableNumber: z.string().trim().min(1).max(50),
+  orders: z.array(
+    z.object({
+      dishId: z.string().uuid(),
+      quantity: z.number(),
+      options: z.string().nullable()
+    })
   )
-  .strict();
-
-export type UpdateOrder = z.TypeOf<typeof updateOrder>;
-
-export const orderDtoDetailRes = buildReply(orderDtoDetail);
-
-export type OrderDtoDetailRes = z.TypeOf<typeof orderDtoDetailRes>;
-
-export const selectOrderDtoDetail = buildSelect(orderDtoDetail);
-
-export const selectOrderDto = buildSelect(orderDto);
-
-export const ordersDtoDetailRes = buildReply(z.array(orderDtoDetail));
-
-export type OrdersDtoDetailRes = z.TypeOf<typeof ordersDtoDetailRes>;
-
-export const guestPayOrders = z.object({
-  guestId: z.string().uuid()
 });
 
-export type GuestPayOrders = z.TypeOf<typeof guestPayOrders>;
+export const selectOrderDtoDetail = buildSelect(orderDtoDetail);
+export const ordersDtoDetailRes = buildReply(z.array(orderDtoDetail));
+export const orderDtoDetailRes = buildReply(orderDtoDetail);
+export const payOrders = z.object({
+  tableNumber: z.string().trim().min(1).max(50)
+});
 
-export const createOrders = z
-  .object({
-    guestId: z.string().uuid(),
-    orders: z.array(
-      z.object({
-        dishId: z.string().uuid(),
-        quantity: z.number(),
-        options: z.string().nullable().default(null)
-      })
-    )
-  })
-  .strict();
-
+export type UpdateOrder = z.TypeOf<typeof updateOrder>;
 export type CreateOrders = z.TypeOf<typeof createOrders>;
+export type TableNumberParam = z.TypeOf<typeof tableNumberParam>;
+export type GuestPayOrders = z.TypeOf<typeof payOrders>;
+export type OrderDtoDetailRes = z.TypeOf<typeof orderDtoDetailRes>;
+export type OrdersDtoDetailRes = z.TypeOf<typeof ordersDtoDetailRes>;

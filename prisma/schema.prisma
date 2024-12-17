@@ -127,11 +127,12 @@ model Order {
   createdAt DateTime    @default(now()) @map("created_at")
   updatedAt DateTime    @updatedAt @map("updated_at")
 
-  guestId String @map("guest_id") @db.Char(36)
-  guest   Guest  @relation(fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  guestId String? @map("guest_id") @db.Char(36)
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   table       Table  @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: Cascade)
   tableNumber String @map("table_number") @db.VarChar(50)
+  token       String @db.VarChar(255)
 
   orderHandlerId String?  @map("order_handler_id") @db.Char(36)
   orderHandler   Account? @relation(fields: [orderHandlerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -162,6 +163,7 @@ model Guest {
 
   tableNumber String @map("table_number") @db.VarChar(50)
   table       Table  @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: Cascade)
+  token       String @db.VarChar(255)
 
   orders Order[]
 

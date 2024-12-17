@@ -1,12 +1,19 @@
 import type { IdParam, Period } from '@/schemaValidations/common.schema';
-import type { CreateOrders, GuestPayOrders, OrderDtoDetailRes, OrdersDtoDetailRes, UpdateOrder } from '@/schemaValidations/order.schema';
+import type {
+  CreateOrders,
+  GuestPayOrders,
+  OrderDtoDetailRes,
+  OrdersDtoDetailRes,
+  TableNumberParam,
+  UpdateOrder
+} from '@/schemaValidations/order.schema';
 import type { FastifyInstance } from 'fastify';
 
 import { ManagerRoom } from '@/constants/const';
 import orderController from '@/controllers/order.controller';
-import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
+import { requireEmployeeHook, requireGuestHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import { idParam, period } from '@/schemaValidations/common.schema';
-import { createOrders, guestPayOrders, orderDtoDetailRes, ordersDtoDetailRes, updateOrder } from '@/schemaValidations/order.schema';
+import { createOrders, payOrders, orderDtoDetailRes, ordersDtoDetailRes, updateOrder, tableNumberParam } from '@/schemaValidations/order.schema';
 
 export default async function orderRoutes(fastify: FastifyInstance) {
   /**
@@ -22,7 +29,7 @@ export default async function orderRoutes(fastify: FastifyInstance) {
 
   /**
    * @POST /api/orders
-   * @description Create orders for guest
+   * @description Create orders for table
    * @buihuytuyen
    */
   fastify.post<{ Reply: OrdersDtoDetailRes; Body: CreateOrders }>(
@@ -36,7 +43,7 @@ export default async function orderRoutes(fastify: FastifyInstance) {
       }
     },
     async (request, reply) => {
-      const { socketId, orders } = await orderController.createOrdersController(request.decodedAccessToken!.userId, request.body);
+      const { socketId, orders } = await orderController.creates(request.decodedAccessToken!.userId, request.body);
       if (socketId) {
         fastify.io.to(ManagerRoom).to(socketId).emit('new-order', orders);
       } else {
@@ -65,7 +72,7 @@ export default async function orderRoutes(fastify: FastifyInstance) {
       }
     },
     async (request, reply) => {
-      const data = await orderController.getOrdersController({
+      const data = await orderController.getByPeriod({
         fromDate: request.query.fromDate,
         toDate: request.query.toDate
       });
@@ -73,6 +80,35 @@ export default async function orderRoutes(fastify: FastifyInstance) {
       reply.send({
         message: 'Lấy danh sách đơn hàng thành công',
         data
+      });
+    }
+  );
+
+  /**
+   * @GET /api/orders
+   * @description get orders by table
+   * @buihuytuyen
+   */
+  fastify.get<{
+    Reply: OrdersDtoDetailRes;
+    Params: TableNumberParam;
+  }>(
+    '/table/:tableNumber',
+    {
+      schema: {
+        response: {
+          200: ordersDtoDetailRes
+        },
+        params: tableNumberParam
+      },
+      preValidation: fastify.auth([requireLoginedHook, requireGuestHook])
+    },
+    async (request, reply) => {
+      const { tableNumber } = request.params;
+      const result = await orderController.getByTable(tableNumber);
+      reply.send({
+        message: 'Lấy danh sách đơn hàng thành công',
+        data: result
       });
     }
   );
@@ -93,7 +129,7 @@ export default async function orderRoutes(fastify: FastifyInstance) {
       }
     },
     async (request, reply) => {
-      const data = await orderController.getOrderDetailController(request.params.id);
+      const data = await orderController.getDetail(request.params.id);
       reply.send({
         message: 'Lấy đơn hàng thành công',
         data
@@ -118,7 +154,7 @@ export default async function orderRoutes(fastify: FastifyInstance) {
       }
     },
     async (request, reply) => {
-      const result = await orderController.updateOrder({ ...request.body, id: request.params.id });
+      const result = await orderController.update({ ...request.body, id: request.params.id });
       if (result.socketId) {
         fastify.io.to(result.socketId).to(ManagerRoom).emit('update-order', result.order);
       } else {
@@ -133,7 +169,7 @@ export default async function orderRoutes(fastify: FastifyInstance) {
 
   /**
    * @POST /api/orders/pay
-   * @description Pay orders for guest
+   * @description Pay orders for table
    * @buihuytuyen
    */
   fastify.post<{ Body: GuestPayOrders; Reply: OrdersDtoDetailRes }>(
@@ -143,12 +179,12 @@ export default async function orderRoutes(fastify: FastifyInstance) {
         response: {
           200: ordersDtoDetailRes
         },
-        body: guestPayOrders
+        body: payOrders
       }
     },
     async (request, reply) => {
-      const result = await orderController.payOrdersController({
-        guestId: request.body.guestId,
+      const result = await orderController.payForTable({
+        tableNumber: request.body.tableNumber,
         orderHandlerId: request.decodedAccessToken!.userId
       });
       if (result.socketId) {

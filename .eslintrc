@@ -46,7 +46,7 @@
       }
     ],
     "unused-imports/no-unused-imports": "error", // Báo lỗi khi có import không sử dụng
-    "unused-imports/no-unused-vars": ["warn", { "vars": "all", "args": "none" }], // Cảnh báo về biến không sử dụng
+    "unused-imports/no-unused-vars": "off", // Cảnh báo về biến không sử dụng
     "@typescript-eslint/no-explicit-any": "off",
     // Quy tắc này bỏ qua cảnh báo cho các biến không sử dụng trong tham số hàm
     "no-unused-vars": [

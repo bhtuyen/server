@@ -23,7 +23,11 @@ type SelectShape<T extends z.ZodTypeAny> =
           ? { select: SelectShape<Shape[K]> }
           : Shape[K] extends z.ZodArray<infer ArrayType>
             ? { select: SelectShape<ArrayType> }
-            : true;
+            : Shape[K] extends z.ZodNullable<infer ObjectNullable>
+              ? ObjectNullable extends z.ZodObject<any>
+                ? { select: SelectShape<ObjectNullable> }
+                : true
+              : true;
       }
     : never;
 
@@ -37,6 +41,13 @@ export function buildSelect<T extends z.ZodObject<any>>(schema: T): SelectShape<
       const arrayElement = value._def.type;
       if (arrayElement instanceof z.ZodObject) {
         acc[key] = { select: buildSelect(arrayElement) }; // Đệ quy xử lý phần tử bên trong array
+      } else {
+        acc[key] = true; // Nếu phần tử không phải object thì gán true
+      }
+    } else if (value instanceof z.ZodNullable) {
+      const nullableElement = value._def.innerType;
+      if (nullableElement instanceof z.ZodObject) {
+        acc[key] = { select: buildSelect(nullableElement) }; // Đệ quy xử lý phần tử bên trong nullable
       } else {
         acc[key] = true; // Nếu phần tử không phải object thì gán true
       }

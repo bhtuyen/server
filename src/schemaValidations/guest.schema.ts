@@ -2,19 +2,18 @@ import z from 'zod';
 
 import { token } from '@/schemaValidations/auth.schema';
 import { buildReply } from '@/schemaValidations/common.schema';
-import { guestDto, orderDtoDetail } from '@/schemaValidations/order.schema';
+import { guestDto } from '@/schemaValidations/order.schema';
 import { buildSelect } from '@/utils/helpers';
 
-/**
- * Guest login
- */
-export const guestLogin = guestDto
-  .pick({ tableNumber: true })
-  .extend({
-    token: z.string()
+export const guestLogin = guestDto.pick({ tableNumber: true, token: true });
+export const guestCreateOrders = z.array(
+  z.object({
+    dishId: z.string().uuid(),
+    quantity: z.number().min(1).max(20),
+    options: z.string().nullable()
   })
-  .strict();
-
+);
+export const guestsRes = buildReply(z.array(guestDto));
 export const guestLoginRes = buildReply(
   z
     .object({
@@ -22,37 +21,10 @@ export const guestLoginRes = buildReply(
     })
     .merge(token)
 );
-export type GuestLogin = z.TypeOf<typeof guestLogin>;
-
-export type GuestDto = z.TypeOf<typeof guestDto>;
-
-export type GuestLoginRes = z.TypeOf<typeof guestLoginRes>;
-
 export const selectGuestDto = buildSelect(guestDto);
 
-/**
- * Guest create order
- */
-export const guestCreateOrders = z.array(
-  z.object({
-    dishId: z.string().uuid(),
-    quantity: z.number().min(1).max(20),
-    options: z.string().nullable().default(null)
-  })
-);
-export const guestCreateOrderRes = buildReply(z.array(orderDtoDetail));
-
-export type GuestCreateOrders = z.TypeOf<typeof guestCreateOrders>;
-export type GuestCreateOrderRes = z.TypeOf<typeof guestCreateOrderRes>;
-
-export const guestsRes = buildReply(z.array(guestDto));
-
+export type GuestDto = z.TypeOf<typeof guestDto>;
 export type GuestsRes = z.TypeOf<typeof guestsRes>;
-
-export const createGuest = guestDto.pick({ tableNumber: true });
-
-export type CreateGuest = z.TypeOf<typeof createGuest>;
-
-export const createGuestRes = buildReply(guestDto);
-
-export type CreateGuestRes = z.TypeOf<typeof createGuestRes>;
+export type GuestLogin = z.TypeOf<typeof guestLogin>;
+export type GuestLoginRes = z.TypeOf<typeof guestLoginRes>;
+export type GuestCreateOrders = z.TypeOf<typeof guestCreateOrders>;

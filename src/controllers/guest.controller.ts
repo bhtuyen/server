@@ -7,7 +7,7 @@ import type { TokenPayload } from '@/types/jwt.types';
 import envConfig from '@/config';
 import prisma from '@/database';
 import { selectDishDto } from '@/schemaValidations/dish.schema';
-import { selectGuestDto, type CreateGuest, type GuestCreateOrders, type GuestLogin } from '@/schemaValidations/guest.schema';
+import { selectGuestDto, type GuestCreateOrders, type GuestLogin } from '@/schemaValidations/guest.schema';
 import { selectOrderDtoDetail } from '@/schemaValidations/order.schema';
 import { AuthError } from '@/utils/errors';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
@@ -19,11 +19,11 @@ class GuestController {
    * @returns
    * @buihuytuyen
    */
-  guestLogin = async (body: GuestLogin) => {
+  guestLogin = async ({ tableNumber, token }: GuestLogin) => {
     const table = await prisma.table.findUnique({
       where: {
-        number: body.tableNumber,
-        token: body.token
+        number: tableNumber,
+        token
       }
     });
     if (!table) {
@@ -40,7 +40,8 @@ class GuestController {
 
     const guest = await prisma.guest.create({
       data: {
-        tableNumber: body.tableNumber
+        tableNumber,
+        token
       },
       select: selectGuestDto
     });
@@ -172,7 +173,8 @@ class GuestController {
         },
         select: {
           status: true,
-          number: true
+          number: true,
+          token: true
         }
       });
 
@@ -213,6 +215,7 @@ class GuestController {
             data: {
               dishSnapshotId: dishSnapshot.id,
               guestId,
+              token: table.token,
               quantity: order.quantity,
               tableNumber: guest.tableNumber,
               orderHandlerId: null,
@@ -228,22 +231,6 @@ class GuestController {
     });
 
     return result;
-  };
-
-  /**
-   * @description Guest get orders
-   * @param guestId
-   * @returns
-   * @buihuytuyen
-   */
-  guestGetOrders = async (guestId: string) => {
-    const orders = await prisma.order.findMany({
-      where: {
-        guestId
-      },
-      select: selectOrderDtoDetail
-    });
-    return orders;
   };
 
   /**
@@ -267,32 +254,6 @@ class GuestController {
       select: selectGuestDto
     });
     return guests;
-  };
-
-  /**
-   * @description Create guest
-   * @param body
-   * @returns
-   * @buihuytuyen
-   */
-  createGuest = async (body: CreateGuest) => {
-    const table = await prisma.table.findUnique({
-      where: {
-        number: body.tableNumber
-      }
-    });
-    if (!table) {
-      throw new Error('Bàn không tồn tại');
-    }
-
-    if (table.status === TableStatus.Hidden) {
-      throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn bàn khác`);
-    }
-    const guest = await prisma.guest.create({
-      data: body,
-      select: selectGuestDto
-    });
-    return guest;
   };
 }
 

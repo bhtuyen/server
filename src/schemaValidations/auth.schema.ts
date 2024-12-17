@@ -3,12 +3,10 @@ import z from 'zod';
 import { accountDto } from '@/schemaValidations/account.schema';
 import { buildReply } from '@/schemaValidations/common.schema';
 
-export const token = z
-  .object({
-    accessToken: z.string(),
-    refreshToken: z.string()
-  })
-  .strict();
+export const token = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string()
+});
 
 export const login = accountDto
   .pick({
@@ -16,8 +14,7 @@ export const login = accountDto
   })
   .extend({
     password: z.string().min(6).max(100)
-  })
-  .strict();
+  });
 
 export type Login = z.TypeOf<typeof login>;
 

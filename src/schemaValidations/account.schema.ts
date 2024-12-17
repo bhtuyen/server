@@ -8,11 +8,11 @@ const account = z
   .object({
     email: z.string().email(),
     password: z.string().min(6).max(100),
-    avatar: z.string().url().nullable().optional(),
+    avatar: z.string().url().nullable(),
     role: z.nativeEnum(Role),
     phone: z.string().min(10).max(15),
-    isVerified: z.boolean().default(false),
-    ownerId: z.string().uuid().nullable().optional()
+    isVerified: z.boolean(),
+    ownerId: z.string().uuid().nullable()
   })
   .merge(updateAndCreate)
   .merge(id)
@@ -71,7 +71,7 @@ export const updateEmployee = accountDto
     changePassword: z.boolean().optional(),
     password: z.string().min(6).max(100).optional(),
     confirmPassword: z.string().min(6).max(100).optional(),
-    role: z.enum([Role.Employee, Role.Owner]).optional().default(Role.Employee)
+    role: z.enum([Role.Employee, Role.Owner]).optional()
   })
   .superRefine(({ confirmPassword, password, changePassword }, ctx) => {
     if (changePassword) {
@@ -93,12 +93,10 @@ export const updateEmployee = accountDto
 
 export type UpdateEmployee = z.TypeOf<typeof updateEmployee>;
 
-export const updateMe = accountDto
-  .pick({
-    name: true,
-    avatar: true
-  })
-  .strict();
+export const updateMe = accountDto.pick({
+  name: true,
+  avatar: true
+});
 
 export type UpdateMe = z.TypeOf<typeof updateMe>;
 
@@ -108,7 +106,6 @@ export const changePassword = z
     password: z.string().min(6).max(100),
     confirmPassword: z.string().min(6).max(100)
   })
-  .strict()
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {
       ctx.addIssue({

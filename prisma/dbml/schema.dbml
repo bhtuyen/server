@@ -94,10 +94,11 @@ Table order {
   status OrderStatus [not null, default: 'Pending']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  guestId String [not null]
-  guest guest [not null]
+  guestId String
+  guest guest
   table table [not null]
   tableNumber String [not null]
+  token String [not null]
   orderHandlerId String
   orderHandler account
   dishSnapshotId String [unique, not null]
@@ -120,6 +121,7 @@ Table guest {
   updatedAt DateTime [not null]
   tableNumber String [not null]
   table table [not null]
+  token String [not null]
   orders order [not null]
   sockets socket [not null]
 }

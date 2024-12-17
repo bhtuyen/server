@@ -1,6 +1,6 @@
 import { DishCategory } from '@prisma/client';
 
-import type { CreateDishCombo, DishCombo, UpdateDishCombo, CreateDishGroup } from '@/schemaValidations/dish.schema';
+import type { CreateDishCombo, DishCombo, UpdateDishCombo, CreateDishGroup, DishToChoose } from '@/schemaValidations/dish.schema';
 
 import { RowMode } from '@/constants/enum';
 import prisma from '@/database';
@@ -27,10 +27,12 @@ class DishController {
    * @returns
    * @buihuytuyen
    */
-  getToChoose = async ({ category, ignores = [] }: { category: DishCategory; ignores?: string[] }) => {
+  getToChoose = async ({ categories, ignores = [] }: DishToChoose) => {
     const dishes = await prisma.dish.findMany({
       where: {
-        category,
+        category: {
+          in: categories
+        },
         NOT: {
           id: {
             in: ignores
