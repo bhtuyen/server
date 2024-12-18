@@ -17,17 +17,6 @@ import { createOrders, payOrders, orderDtoDetailRes, ordersDtoDetailRes, updateO
 
 export default async function orderRoutes(fastify: FastifyInstance) {
   /**
-   * @description Require logined hook, require owner or employee hook
-   * @buihuytuyen
-   */
-  fastify.addHook(
-    'preValidation',
-    fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
-      relation: 'and'
-    })
-  );
-
-  /**
    * @POST /api/orders
    * @description Create orders for table
    * @buihuytuyen
@@ -40,7 +29,10 @@ export default async function orderRoutes(fastify: FastifyInstance) {
           200: ordersDtoDetailRes
         },
         body: createOrders
-      }
+      },
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const { socketId, orders } = await orderController.creates(request.decodedAccessToken!.userId, request.body);
@@ -69,7 +61,10 @@ export default async function orderRoutes(fastify: FastifyInstance) {
           200: ordersDtoDetailRes
         },
         querystring: period
-      }
+      },
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const data = await orderController.getByPeriod({
@@ -126,7 +121,10 @@ export default async function orderRoutes(fastify: FastifyInstance) {
           200: orderDtoDetailRes
         },
         params: idParam
-      }
+      },
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const data = await orderController.getDetail(request.params.id);
@@ -151,7 +149,10 @@ export default async function orderRoutes(fastify: FastifyInstance) {
         },
         body: updateOrder,
         params: idParam
-      }
+      },
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const result = await orderController.update({ ...request.body, id: request.params.id });
@@ -180,7 +181,10 @@ export default async function orderRoutes(fastify: FastifyInstance) {
           200: ordersDtoDetailRes
         },
         body: payOrders
-      }
+      },
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const result = await orderController.payForTable({

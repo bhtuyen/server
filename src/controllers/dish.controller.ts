@@ -74,7 +74,10 @@ class DishController {
    */
   createDish = async ({ dishes, combos, ...data }: CreateDishCombo) => {
     const { id } = await prisma.dish.create({
-      data
+      data: {
+        ...data,
+        price: data.price ?? null
+      }
     });
 
     let dishCombo: DishCombo[] = [];

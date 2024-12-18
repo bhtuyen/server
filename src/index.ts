@@ -17,17 +17,18 @@ import { accountRoutes, authRoutes, dishRoutes, guestRoutes, indicatorRoutes, me
 import { createFolder } from '@/utils/helpers';
 
 const fastify = Fastify({
-  logger: {
-    level: 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true, // Thêm màu sắc
-        translateTime: 'yyyy-mm-dd HH:MM:ss', // Định dạng thời gian
-        ignore: 'pid,hostname, reqId' // Loại bỏ các trường không cần thiết
-      }
-    }
-  }
+  logger: false
+  // logger: {
+  //   level: 'info',
+  //   transport: {
+  //     target: 'pino-pretty',
+  //     options: {
+  //       colorize: true, // Thêm màu sắc
+  //       translateTime: 'yyyy-mm-dd HH:MM:ss', // Định dạng thời gian
+  //       ignore: 'pid,hostname, reqId' // Loại bỏ các trường không cần thiết
+  //     }
+  //   }
+  // }
 });
 
 // Run the server!

@@ -40,12 +40,12 @@ export const createEmployee = accountDto
   .pick({
     name: true,
     email: true,
-    phone: true,
-    avatar: true
+    phone: true
   })
   .extend({
     confirmPassword: z.string().min(6).max(100),
-    password: z.string().min(6).max(100)
+    password: z.string().min(6).max(100),
+    avatar: z.string().url().optional()
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {
@@ -93,10 +93,13 @@ export const updateEmployee = accountDto
 
 export type UpdateEmployee = z.TypeOf<typeof updateEmployee>;
 
-export const updateMe = accountDto.pick({
-  name: true,
-  avatar: true
-});
+export const updateMe = accountDto
+  .pick({
+    name: true
+  })
+  .extend({
+    avatar: z.string().url().optional()
+  });
 
 export type UpdateMe = z.TypeOf<typeof updateMe>;
 

@@ -56,14 +56,15 @@ export const dishDtoComboDetail = dishDtoDetail.extend({
     })
   )
 });
-export const createDishCombo = dishDto.omit({ id: true }).extend({
+export const createDishCombo = dishDto.omit({ id: true, price: true }).extend({
   dishes: z.array(z.object({ dishId: z.string().uuid(), quantity: z.number().int().min(1).max(20) })),
   combos: z.array(
     z.object({
       comboId: z.string().uuid(),
       quantity: z.number().int().min(1).max(20)
     })
-  )
+  ),
+  price: z.instanceof(Prisma.Decimal).or(z.number()).optional()
 });
 export const updateDishCombo = dishDto.extend({
   dishes: z.array(

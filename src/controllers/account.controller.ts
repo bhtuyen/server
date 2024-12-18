@@ -51,7 +51,7 @@ class AccountController {
           password: hashedPassword,
           phone: body.phone,
           role: Role.Employee,
-          avatar: body.avatar
+          avatar: body.avatar || null
         },
         select: selectAccountDto
       });
