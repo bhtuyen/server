@@ -33,7 +33,6 @@ const fastify = Fastify({
 // Run the server!
 const start = async () => {
   try {
-    console.log('BHTUYEN 09092001 - HIHI');
     createFolder(path.resolve(envConfig.UPLOAD_FOLDER));
     createFolder(path.resolve(envConfig.UPLOAD_FOLDER_TEMP));
     autoRemoveRefreshTokenJob();

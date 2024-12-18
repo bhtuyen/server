@@ -42,7 +42,7 @@ jobs:
             git fetch --all
             git reset --hard origin/main
             echo "${{secrets.ENV_PRODUCTION}}" > .env
-            npm install
+            npm install --force
             npx prisma generate
             npm run build
             pm2 restart server
