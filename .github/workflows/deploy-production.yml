@@ -33,7 +33,7 @@ jobs:
         with:
           host: ${{ secrets.HOST_PRODUCTION }}
           username: ${{ secrets.USERNAME_PRODUCTION }}
-          key: ${{ secrets.PRIVATE_KEY_PRODUCTION }}
+          password: ${{ secrets.PASSWORD_PRODUCTION }}
           port: ${{ secrets.PORT_PRODUCTION }}
           script: |
             export NVM_DIR=~/.nvm
