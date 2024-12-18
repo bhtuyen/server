@@ -35,14 +35,14 @@ jobs:
           username: ${{ secrets.USERNAME_PRODUCTION }}
           password: ${{ secrets.PASSWORD_PRODUCTION }}
           port: ${{ secrets.PORT_PRODUCTION }}
-          script: |
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh
-            cd ~/project/server
-            git fetch --all
-            git reset --hard origin/main
-            echo "${{secrets.ENV_PRODUCTION}}" > .env
-            npm install
-            npx prisma generate
-            npm run build
-            pm2 restart server
+          # script: |
+          #   export NVM_DIR=~/.nvm
+          #   source ~/.nvm/nvm.sh
+          #   cd ~/project/server
+          #   git fetch --all
+          #   git reset --hard origin/main
+          #   echo "${{secrets.ENV_PRODUCTION}}" > .env
+          #   npm install
+          #   npx prisma generate
+          #   npm run build
+          #   pm2 restart server
