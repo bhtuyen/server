@@ -60,31 +60,31 @@ const start = async () => {
     });
     fastify.register(socketPlugin);
     fastify.register(authRoutes, {
-      prefix: '/apis/auth'
+      prefix: '/auth'
     });
     fastify.register(accountRoutes, {
-      prefix: '/apis/accounts'
+      prefix: '/accounts'
     });
     fastify.register(mediaRoutes, {
-      prefix: '/apis/media'
+      prefix: '/media'
     });
     fastify.register(staticRoutes, {
-      prefix: '/apis/static'
+      prefix: '/static'
     });
     fastify.register(dishRoutes, {
-      prefix: '/apis/dishes'
+      prefix: '/dishes'
     });
     fastify.register(tablesRoutes, {
-      prefix: '/apis/tables'
+      prefix: '/tables'
     });
     fastify.register(orderRoutes, {
-      prefix: '/apis/orders'
+      prefix: '/orders'
     });
     fastify.register(guestRoutes, {
-      prefix: '/apis/guest'
+      prefix: '/guest'
     });
     fastify.register(indicatorRoutes, {
-      prefix: '/apis/indicators'
+      prefix: '/indicators'
     });
     await accountController.initOwnerAccount();
     await fastify.listen({
