@@ -17,7 +17,17 @@ import { accountRoutes, authRoutes, dishRoutes, guestRoutes, indicatorRoutes, me
 import { createFolder } from '@/utils/helpers';
 
 const fastify = Fastify({
-  logger: false
+  logger: {
+    level: 'info',
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true, // Thêm màu sắc
+        translateTime: 'yyyy-mm-dd HH:MM:ss', // Định dạng thời gian
+        ignore: 'pid,hostname, reqId' // Loại bỏ các trường không cần thiết
+      }
+    }
+  }
 });
 
 // Run the server!
@@ -45,40 +55,41 @@ const start = async () => {
     fastify.register(errorHandlerPlugin);
     fastify.register(fastifySocketIO, {
       cors: {
-        origin: envConfig.CLIENT_URL
+        origin: envConfig.CLIENT_URL,
       }
     });
     fastify.register(socketPlugin);
     fastify.register(authRoutes, {
-      prefix: '/auth'
+      prefix: '/apis/auth'
     });
     fastify.register(accountRoutes, {
-      prefix: '/accounts'
+      prefix: '/apis/accounts'
     });
     fastify.register(mediaRoutes, {
-      prefix: '/media'
+      prefix: '/apis/media'
     });
     fastify.register(staticRoutes, {
-      prefix: '/static'
+      prefix: '/apis/static'
     });
     fastify.register(dishRoutes, {
-      prefix: '/dishes'
+      prefix: '/apis/dishes'
     });
     fastify.register(tablesRoutes, {
-      prefix: '/tables'
+      prefix: '/apis/tables'
     });
     fastify.register(orderRoutes, {
-      prefix: '/orders'
+      prefix: '/apis/orders'
     });
     fastify.register(guestRoutes, {
-      prefix: '/guest'
+      prefix: '/apis/guest'
     });
     fastify.register(indicatorRoutes, {
-      prefix: '/indicators'
+      prefix: '/apis/indicators'
     });
     await accountController.initOwnerAccount();
     await fastify.listen({
-      port: envConfig.PORT
+      port: envConfig.PORT,
+      host: envConfig.PRODUCTION ? '0.0.0.0' : 'localhost'
     });
     fastify.log.info(`Server đang chạy: ${API_URL}`);
   } catch (err) {
