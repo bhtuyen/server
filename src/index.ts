@@ -33,6 +33,7 @@ const fastify = Fastify({
 // Run the server!
 const start = async () => {
   try {
+    console.log('BHTUYEN');
     createFolder(path.resolve(envConfig.UPLOAD_FOLDER));
     createFolder(path.resolve(envConfig.UPLOAD_FOLDER_TEMP));
     autoRemoveRefreshTokenJob();
@@ -55,7 +56,7 @@ const start = async () => {
     fastify.register(errorHandlerPlugin);
     fastify.register(fastifySocketIO, {
       cors: {
-        origin: envConfig.CLIENT_URL,
+        origin: envConfig.CLIENT_URL
       }
     });
     fastify.register(socketPlugin);

@@ -24,3 +24,25 @@ jobs:
         run: npm install
       - name: Build
         run: npm run build
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST_PRODUCTION }}
+          username: ${{ secrets.USERNAME_PRODUCTION }}
+          password: ${{ secrets.PASSWORD_PRODUCTION }}
+          port: ${{ secrets.PORT_PRODUCTION }}
+          script: |
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            cd ~/project/server
+            git fetch --all
+            git reset --hard origin/main
+            echo "${{secrets.ENV_PRODUCTION}}" > .env
+            npm install
+            npx prisma generate
+            npm run build
+            pm2 restart server
