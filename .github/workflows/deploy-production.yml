@@ -33,7 +33,6 @@ jobs:
         with:
           host: ${{ secrets.HOST_PRODUCTION }}
           username: ${{ secrets.USERNAME_PRODUCTION }}
-          # password: ${{ secrets.PASSWORD_PRODUCTION }}
           key: ${{ secrets.SSH_KEY_PRODUCTION }}
           port: ${{ secrets.PORT_PRODUCTION }}
           script: |
