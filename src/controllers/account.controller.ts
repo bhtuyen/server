@@ -283,18 +283,18 @@ class AccountController {
       }
     });
     const accessToken = signAccessToken({
-      userId: account.id,
-      role: account.role
+      role: account.role,
+      accountId
     });
     const refreshToken = signRefreshToken({
-      userId: account.id,
+      accountId,
       role: account.role
     });
     const decodedRefreshToken = verifyRefreshToken(refreshToken);
     const expiresAt = new Date(decodedRefreshToken.exp * 1000);
     await prisma.refreshToken.create({
       data: {
-        accountId: account.id,
+        accountId,
         token: refreshToken,
         expiresAt
       }

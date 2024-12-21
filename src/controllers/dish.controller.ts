@@ -67,6 +67,22 @@ class DishController {
   };
 
   /**
+   * @description Get dish to order
+   * @returns
+   * @buihuytuyen
+   */
+  getDishToOrder = async () => {
+    return await prisma.dish.findMany({
+      where: {
+        category: {
+          in: [DishCategory.ComboBuffet, DishCategory.ComboPaid, DishCategory.Paid]
+        }
+      },
+      select: selectDishDtoComboDetail
+    });
+  };
+
+  /**
    * @description Create dish
    * @param data
    * @returns

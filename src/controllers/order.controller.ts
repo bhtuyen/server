@@ -14,7 +14,7 @@ class OrderController {
    * @buihuytuyen
    */
   creates = async (orderHandlerId: string, body: CreateOrders) => {
-    const { tableNumber, orders } = body;
+    const { tableNumber, dishes } = body;
 
     const table = await prisma.table.findUniqueOrThrow({
       where: {
@@ -25,12 +25,12 @@ class OrderController {
       throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn khách hàng khác!`);
     }
 
-    const ordersRecord = await prisma.$transaction(async (tx) => {
+    const orders = await prisma.$transaction(async (tx) => {
       const ordersRecord = await Promise.all(
-        orders.map(async (order) => {
+        dishes.map(async ({ dishId, quantity, options }) => {
           const dish = await tx.dish.findUniqueOrThrow({
             where: {
-              id: order.dishId
+              id: dishId
             }
           });
           if (dish.status === DishStatus.Unavailable) {
@@ -55,11 +55,11 @@ class OrderController {
             data: {
               dishSnapshotId: dishSnapshot.id,
               guestId: null,
-              quantity: order.quantity,
+              quantity,
               tableNumber: tableNumber,
               orderHandlerId,
               status: OrderStatus.Pending,
-              options: order.options,
+              options,
               token: table.token
             },
             select: selectOrderDtoDetail
@@ -70,22 +70,24 @@ class OrderController {
       return ordersRecord;
     });
 
-    const guestOfTable = await prisma.guest.findFirstOrThrow({
+    const guestsOfTable = await prisma.guest.findMany({
       where: {
         tableNumber,
         token: table.token
       }
     });
 
-    const socketRecord = await prisma.socket.findUnique({
+    const sockets = await prisma.socket.findMany({
       where: {
-        guestId: guestOfTable.id
+        guestId: {
+          in: guestsOfTable.map(({ id }) => id)
+        }
       }
     });
 
     return {
-      orders: ordersRecord,
-      socketId: socketRecord?.socketId
+      orders: orders,
+      socketIds: sockets.map(({ socketId }) => socketId)
     };
   };
 
@@ -280,21 +282,23 @@ class OrderController {
       return newOrder;
     });
 
-    const guestOfTable = await prisma.guest.findFirstOrThrow({
+    const guestsOfTable = await prisma.guest.findMany({
       where: {
         tableNumber: result.tableNumber,
         token: result.token
       }
     });
 
-    const socketRecord = await prisma.socket.findUnique({
+    const sockets = await prisma.socket.findMany({
       where: {
-        guestId: guestOfTable.id
+        guestId: {
+          in: guestsOfTable.map(({ id }) => id)
+        }
       }
     });
     return {
       order: result,
-      socketId: socketRecord?.socketId
+      socketIds: sockets.map(({ socketId }) => socketId)
     };
   };
 }

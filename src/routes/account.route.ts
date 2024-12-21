@@ -1,13 +1,14 @@
 import type { AccountRes, AccountsRes, ChangePassword, CreateEmployee, UpdateEmployee, UpdateMe } from '@/schemaValidations/account.schema';
 import type { LoginRes } from '@/schemaValidations/auth.schema';
-import type { IdParam } from '@/schemaValidations/common.schema';
+import type { IdParam, MessageRes } from '@/schemaValidations/common.schema';
 import type { FastifyInstance } from 'fastify';
 
+import { GuestOrderRole } from '@/constants/const';
 import accountController from '@/controllers/account.controller';
 import { pauseApiHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import { accountRes, accountsRes, changePassword, createEmployee, updateEmployee, updateMe } from '@/schemaValidations/account.schema';
 import { loginRes } from '@/schemaValidations/auth.schema';
-import { idParam } from '@/schemaValidations/common.schema';
+import { idParam, messageRes } from '@/schemaValidations/common.schema';
 
 export default async function accountRoutes(fastify: FastifyInstance) {
   /**
@@ -153,20 +154,33 @@ export default async function accountRoutes(fastify: FastifyInstance) {
    * @description Get me
    * @buihuytuyen
    */
-  fastify.get<{ Reply: AccountRes }>(
+  fastify.get<{
+    Reply: {
+      200: AccountRes;
+      400: MessageRes;
+    };
+  }>(
     '/me',
     {
       schema: {
         response: {
-          200: accountRes
+          200: accountRes,
+          400: messageRes
         }
       }
     },
-    async (request, reply) => {
-      const account = await accountController.getMe(request.decodedAccessToken!.userId);
-      reply.send({
-        data: account,
-        message: 'Lấy thông tin thành công'
+    async ({ decodedAccessToken }, reply) => {
+      if (decodedAccessToken && !(decodedAccessToken.role === GuestOrderRole)) {
+        const { accountId } = decodedAccessToken;
+        const account = await accountController.getMe(accountId);
+        reply.status(200).send({
+          data: account,
+          message: 'Lấy thông tin thành công'
+        });
+      }
+
+      reply.status(400).send({
+        message: 'Bạn không có quyền lấy thông tin'
       });
     }
   );
@@ -176,24 +190,35 @@ export default async function accountRoutes(fastify: FastifyInstance) {
    * @buihuytuyen
    */
   fastify.put<{
-    Reply: AccountRes;
+    Reply: {
+      200: AccountRes;
+      400: MessageRes;
+    };
     Body: UpdateMe;
   }>(
     '/me',
     {
       schema: {
         response: {
-          200: accountRes
+          200: accountRes,
+          400: messageRes
         },
         body: updateMe
       },
       preValidation: fastify.auth([pauseApiHook])
     },
-    async (request, reply) => {
-      const result = await accountController.updateMe(request.decodedAccessToken!.userId, request.body);
-      reply.send({
-        data: result,
-        message: 'Cập nhật thông tin thành công'
+    async ({ decodedAccessToken, body }, reply) => {
+      if (decodedAccessToken && !(decodedAccessToken.role === GuestOrderRole)) {
+        const { accountId } = decodedAccessToken;
+        const result = await accountController.updateMe(accountId, body);
+        reply.status(200).send({
+          data: result,
+          message: 'Cập nhật thông tin thành công'
+        });
+      }
+
+      reply.status(400).send({
+        message: 'Bạn không có quyền cập nhật thông tin'
       });
     }
   );
@@ -203,24 +228,35 @@ export default async function accountRoutes(fastify: FastifyInstance) {
    * @buihuytuyen
    */
   fastify.put<{
-    Reply: AccountRes;
+    Reply: {
+      200: AccountRes;
+      400: MessageRes;
+    };
     Body: ChangePassword;
   }>(
     '/change-password',
     {
       schema: {
         response: {
-          200: accountRes
+          200: accountRes,
+          400: messageRes
         },
         body: changePassword
       },
       preValidation: fastify.auth([pauseApiHook])
     },
-    async (request, reply) => {
-      const result = await accountController.changePassword(request.decodedAccessToken!.userId, request.body);
-      reply.send({
-        data: result,
-        message: 'Đổi mật khẩu thành công'
+    async ({ decodedAccessToken, body }, reply) => {
+      if (decodedAccessToken && !(decodedAccessToken.role === GuestOrderRole)) {
+        const { accountId } = decodedAccessToken;
+        const result = await accountController.changePassword(accountId, body);
+        reply.status(200).send({
+          data: result,
+          message: 'Đổi mật khẩu thành công'
+        });
+      }
+
+      reply.status(400).send({
+        message: 'Bạn không có quyền đổi mật khẩu'
       });
     }
   );
@@ -230,24 +266,35 @@ export default async function accountRoutes(fastify: FastifyInstance) {
    * @buihuytuyen
    */
   fastify.put<{
-    Reply: LoginRes;
+    Reply: {
+      200: LoginRes;
+      400: MessageRes;
+    };
     Body: ChangePassword;
   }>(
     '/change-password-v2',
     {
       schema: {
         response: {
-          200: loginRes
+          200: loginRes,
+          400: messageRes
         },
         body: changePassword
       },
       preValidation: fastify.auth([pauseApiHook])
     },
-    async (request, reply) => {
-      const result = await accountController.changePasswordV2(request.decodedAccessToken!.userId, request.body);
-      reply.send({
-        data: result,
-        message: 'Đổi mật khẩu thành công'
+    async ({ decodedAccessToken, body }, reply) => {
+      if (decodedAccessToken && !(decodedAccessToken.role === GuestOrderRole)) {
+        const { accountId } = decodedAccessToken;
+        const result = await accountController.changePasswordV2(accountId, body);
+        reply.status(200).send({
+          data: result,
+          message: 'Đổi mật khẩu thành công'
+        });
+      }
+
+      reply.status(400).send({
+        message: 'Bạn không có quyền đổi mật khẩu'
       });
     }
   );

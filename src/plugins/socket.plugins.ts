@@ -1,7 +1,6 @@
-import { Role } from '@prisma/client';
 import fastifyPlugin from 'fastify-plugin';
 
-import { ManagerRoom } from '@/constants/const';
+import { GuestOrderRole, ManagerRoom } from '@/constants/const';
 import prisma from '@/database';
 import { AuthError } from '@/utils/errors';
 import { getChalk } from '@/utils/helpers';
@@ -18,30 +17,33 @@ export const socketPlugin = fastifyPlugin(async (fastify) => {
     const accessToken = Authorization.split(' ')[1];
     try {
       const decodedAccessToken = verifyAccessToken(accessToken);
-      const { userId, role } = decodedAccessToken;
-      if (role === Role.Guest) {
+      const { role } = decodedAccessToken;
+
+      if (role === GuestOrderRole) {
+        const { guestId } = decodedAccessToken;
         await prisma.socket.upsert({
           where: {
-            guestId: userId
+            guestId
           },
           update: {
             socketId: socket.id
           },
           create: {
-            guestId: userId,
+            guestId,
             socketId: socket.id
           }
         });
       } else {
+        const { accountId } = decodedAccessToken;
         await prisma.socket.upsert({
           where: {
-            accountId: userId
+            accountId
           },
           update: {
             socketId: socket.id
           },
           create: {
-            accountId: userId,
+            accountId,
             socketId: socket.id
           }
         });

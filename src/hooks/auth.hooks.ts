@@ -2,6 +2,7 @@ import { Role } from '@prisma/client';
 
 import type { FastifyRequest } from 'fastify';
 
+import { GuestOrderRole } from '@/constants/const';
 import { AuthError } from '@/utils/errors';
 import { verifyAccessToken } from '@/utils/jwt';
 
@@ -32,8 +33,8 @@ export const requireEmployeeHook = async (request: FastifyRequest) => {
   }
 };
 
-export const requireGuestHook = async (request: FastifyRequest) => {
-  if (request.decodedAccessToken?.role !== Role.Guest) {
+export const requireGuestOrderHook = async (request: FastifyRequest) => {
+  if (request.decodedAccessToken?.role !== GuestOrderRole) {
     throw new AuthError('Bạn không có quyền truy cập');
   }
 };

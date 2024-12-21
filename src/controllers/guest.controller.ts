@@ -1,10 +1,11 @@
-import { DishStatus, OrderStatus, Role, TableStatus } from '@prisma/client';
+import { DishStatus, OrderStatus, TableStatus } from '@prisma/client';
 import ms from 'ms';
 
 import type { Period } from '@/schemaValidations/common.schema';
 import type { TokenPayload } from '@/types/jwt.types';
 
 import envConfig from '@/config';
+import { GuestOrderRole } from '@/constants/const';
 import prisma from '@/database';
 import { selectDishDto } from '@/schemaValidations/dish.schema';
 import { selectGuestDto, type GuestCreateOrders, type GuestLogin } from '@/schemaValidations/guest.schema';
@@ -47,8 +48,10 @@ class GuestController {
     });
     const refreshToken = signRefreshToken(
       {
-        userId: guest.id,
-        role: Role.Guest
+        role: GuestOrderRole,
+        tableNumber,
+        tableToken: token,
+        guestId: guest.id
       },
       {
         expiresIn: ms(envConfig.GUEST_REFRESH_TOKEN_EXPIRES_IN)
@@ -56,8 +59,10 @@ class GuestController {
     );
     const accessToken = signAccessToken(
       {
-        userId: guest.id,
-        role: Role.Guest
+        role: GuestOrderRole,
+        tableNumber,
+        tableToken: token,
+        guestId: guest.id
       },
       {
         expiresIn: ms(envConfig.GUEST_ACCESS_TOKEN_EXPIRES_IN)
@@ -115,15 +120,24 @@ class GuestController {
     } catch {
       throw new AuthError('Refresh token không hợp lệ');
     }
+    if (decodedRefreshToken.role !== GuestOrderRole) {
+      throw new AuthError('Refresh token không hợp lệ');
+    }
+
+    const { tableNumber, tableToken, guestId, exp } = decodedRefreshToken;
     const newRefreshToken = signRefreshToken({
-      userId: decodedRefreshToken.userId,
-      role: Role.Guest,
-      exp: decodedRefreshToken.exp
+      role: GuestOrderRole,
+      tableNumber,
+      tableToken,
+      guestId,
+      exp
     });
     const newAccessToken = signAccessToken(
       {
-        userId: decodedRefreshToken.userId,
-        role: Role.Guest
+        role: GuestOrderRole,
+        tableNumber,
+        tableToken,
+        guestId
       },
       {
         expiresIn: ms(envConfig.GUEST_ACCESS_TOKEN_EXPIRES_IN)
@@ -131,7 +145,7 @@ class GuestController {
     );
     await prisma.guest.update({
       where: {
-        id: decodedRefreshToken.userId
+        id: guestId
       },
       data: {
         refreshToken: newRefreshToken,

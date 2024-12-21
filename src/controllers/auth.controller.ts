@@ -51,11 +51,11 @@ class AuthController {
       throw new EntityError([{ field: 'password', message: 'Email hoặc mật khẩu không đúng' }]);
     }
     const accessToken = signAccessToken({
-      userId: account.id,
+      accountId: account.id,
       role: account.role
     });
     const refreshToken = signRefreshToken({
-      userId: account.id,
+      accountId: account.id,
       role: account.role
     });
     const decodedRefreshToken = verifyRefreshToken(refreshToken);
@@ -98,11 +98,11 @@ class AuthController {
     });
     const account = refreshTokenDoc.account;
     const newAccessToken = signAccessToken({
-      userId: account.id,
+      accountId: account.id,
       role: account.role
     });
     const newRefreshToken = signRefreshToken({
-      userId: account.id,
+      accountId: account.id,
       role: account.role,
       exp: decodedRefreshToken.exp
     });
@@ -197,11 +197,11 @@ class AuthController {
       });
     }
     const accessToken = signAccessToken({
-      userId: account.id,
+      accountId: account.id,
       role: account.role
     });
     const refreshToken = signRefreshToken({
-      userId: account.id,
+      accountId: account.id,
       role: account.role
     });
 

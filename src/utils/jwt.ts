@@ -1,18 +1,13 @@
 import { createSigner, createVerifier } from 'fast-jwt';
 import ms from 'ms';
 
-import type { TokenPayload } from '@/types/jwt.types';
+import type { DataPayload, TokenPayload } from '@/types/jwt.types';
 import type { PrivateKey, SignerOptions } from 'fast-jwt';
 
 import envConfig from '@/config';
 import { Token } from '@/constants/enum';
 
-export const signAccessToken = (
-  payload: Pick<TokenPayload, 'userId' | 'role'> & {
-    exp?: number;
-  },
-  options?: SignerOptions
-) => {
+export const signAccessToken = (payload: DataPayload & { exp?: number }, options?: SignerOptions) => {
   const { exp } = payload;
   const optionSigner: Partial<SignerOptions & { key: string | Buffer | PrivateKey }> = exp
     ? {
@@ -30,12 +25,7 @@ export const signAccessToken = (
   return signSync({ ...payload, tokenType: Token.AccessToken });
 };
 
-export const signRefreshToken = (
-  payload: Pick<TokenPayload, 'userId' | 'role'> & {
-    exp?: number;
-  },
-  options?: SignerOptions
-) => {
+export const signRefreshToken = (payload: DataPayload & { exp?: number }, options?: SignerOptions) => {
   const { exp } = payload;
   const optionSigner: Partial<SignerOptions & { key: string | Buffer | PrivateKey }> = exp
     ? {

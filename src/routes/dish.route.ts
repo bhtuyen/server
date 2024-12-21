@@ -2,6 +2,7 @@ import type {
   CreateDishCombo,
   CreateDishGroup,
   DishDtoComboDetailRes,
+  DishDtoComboDetailsRes,
   DishDtoDetailChooseRes,
   DishesRes,
   DishGroupRes,
@@ -107,6 +108,21 @@ export default async function dishRoutes(fastify: FastifyInstance) {
       });
     }
   );
+
+  /**
+   * @description Get dish to order
+   * @buihuytuyen
+   */
+  fastify.get<{
+    Reply: DishDtoComboDetailsRes;
+  }>('/order', async (_, reply) => {
+    const data = await dishController.getDishToOrder();
+
+    reply.send({
+      data,
+      message: 'Lấy danh sách món ăn thành công!'
+    });
+  });
 
   /**
    * @description Create dish

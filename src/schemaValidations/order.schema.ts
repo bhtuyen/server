@@ -67,7 +67,7 @@ export const updateOrder = orderDto
 
 export const createOrders = z.object({
   tableNumber: z.string().trim().min(1).max(50),
-  orders: z.array(
+  dishes: z.array(
     z.object({
       dishId: z.string().uuid(),
       quantity: z.number(),

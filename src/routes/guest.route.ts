@@ -4,11 +4,11 @@ import type { GuestCreateOrders, GuestLogin, GuestLoginRes, GuestsRes } from '@/
 import type { OrdersDtoDetailRes } from '@/schemaValidations/order.schema';
 import type { FastifyInstance } from 'fastify';
 
-import { ManagerRoom } from '@/constants/const';
+import { GuestOrderRole, ManagerRoom } from '@/constants/const';
 import guestController from '@/controllers/guest.controller';
-import { requireEmployeeHook, requireGuestHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
+import { requireEmployeeHook, requireGuestOrderHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import { logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
-import { message, period } from '@/schemaValidations/common.schema';
+import { message, messageRes, period } from '@/schemaValidations/common.schema';
 import { guestCreateOrders, guestLogin, guestLoginRes, guestsRes } from '@/schemaValidations/guest.schema';
 import { ordersDtoDetailRes } from '@/schemaValidations/order.schema';
 
@@ -52,10 +52,17 @@ export default async function guestRoutes(fastify: FastifyInstance) {
       },
       preValidation: fastify.auth([requireLoginedHook])
     },
-    async (request, reply) => {
-      const message = await guestController.guestLogout(request.decodedAccessToken!.userId);
+    async ({ decodedAccessToken }, reply) => {
+      if (decodedAccessToken && decodedAccessToken.role === GuestOrderRole) {
+        const { guestId } = decodedAccessToken;
+        const message = await guestController.guestLogout(guestId);
+        reply.send({
+          message
+        });
+      }
+
       reply.send({
-        message
+        message: 'Đăng xuất thành công'
       });
     }
   );
@@ -91,26 +98,36 @@ export default async function guestRoutes(fastify: FastifyInstance) {
    * @buihuytuyen
    */
   fastify.post<{
-    Reply: OrdersDtoDetailRes;
+    Reply: {
+      200: OrdersDtoDetailRes;
+      400: MessageRes;
+    };
     Body: GuestCreateOrders;
   }>(
     '/orders',
     {
       schema: {
         response: {
-          200: ordersDtoDetailRes
+          200: ordersDtoDetailRes,
+          400: messageRes
         },
         body: guestCreateOrders
       },
-      preValidation: fastify.auth([requireLoginedHook, requireGuestHook])
+      preValidation: fastify.auth([requireLoginedHook, requireGuestOrderHook])
     },
-    async (request, reply) => {
-      const guestId = request.decodedAccessToken?.userId;
-      const result = await guestController.guestCreateOrders(guestId!, request.body);
-      fastify.io.to(ManagerRoom).emit('new-order', result);
-      reply.send({
-        message: 'Đặt món thành công',
-        data: result
+    async ({ decodedAccessToken, body }, reply) => {
+      if (decodedAccessToken && decodedAccessToken.role === GuestOrderRole) {
+        const { guestId } = decodedAccessToken;
+        const result = await guestController.guestCreateOrders(guestId, body);
+        fastify.io.to(ManagerRoom).emit('new-order', result);
+        reply.status(200).send({
+          message: 'Đặt món thành công',
+          data: result
+        });
+      }
+
+      reply.status(400).send({
+        message: 'Bạn không có quyền đặt món'
       });
     }
   );

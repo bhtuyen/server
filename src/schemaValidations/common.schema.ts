@@ -4,6 +4,7 @@ export const message = z.object({
   message: z.string()
 });
 
+export const messageRes = message;
 export type MessageRes = z.TypeOf<typeof message>;
 
 export const create = z.object({
