@@ -78,6 +78,17 @@ class DishController {
           in: [DishCategory.ComboBuffet, DishCategory.ComboPaid, DishCategory.Paid]
         }
       },
+      orderBy: [
+        {
+          group: {
+            sortOrder: 'asc'
+          }
+        },
+        {
+          price: 'asc'
+        }
+      ],
+
       select: selectDishDtoComboDetail
     });
   };
@@ -277,7 +288,7 @@ class DishController {
   getDishGroupList = () => {
     return prisma.dishGroup.findMany({
       orderBy: {
-        createdAt: 'desc'
+        sortOrder: 'asc'
       },
       select: selectDishGroupDto
     });

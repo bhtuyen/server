@@ -1,10 +1,12 @@
 import type { IdParam } from '@/schemaValidations/common.schema';
+import type { TableDtoDetailRes, TableNumberParam } from '@/schemaValidations/order.schema';
 import type { CreateTable, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
 import type { FastifyInstance } from 'fastify';
 
 import tableController from '@/controllers/table.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import { idParam } from '@/schemaValidations/common.schema';
+import { tableDtoDetailRes, tableDtoDetailsRes, tableNumberParam, type TableDtoDetailsRes } from '@/schemaValidations/order.schema';
 import { createTable, tableRes, tablesRes, updateTable } from '@/schemaValidations/table.schema';
 
 export default async function tablesRoutes(fastify: FastifyInstance) {
@@ -152,6 +154,57 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
       reply.send({
         message: 'Xóa bàn thành công!',
         data: table
+      });
+    }
+  );
+
+  /**
+   * @description get tables detail now
+   * @buihuytuyen
+   */
+  fastify.get<{
+    Reply: TableDtoDetailRes;
+    Params: TableNumberParam;
+  }>(
+    '/detail-now/:tableNumber',
+    {
+      schema: {
+        params: tableNumberParam,
+        response: {
+          200: tableDtoDetailRes
+        }
+      }
+    },
+    async (request, reply) => {
+      const tableNumber = request.params.tableNumber;
+      const table = await tableController.getTableDetailNow(tableNumber);
+      reply.send({
+        data: table,
+        message: 'Lấy thông tin bàn thành công!'
+      });
+    }
+  );
+
+  /**
+   * @description get tables detail now
+   * @buihuytuyen
+   */
+  fastify.get<{
+    Reply: TableDtoDetailsRes;
+  }>(
+    '/detail-now',
+    {
+      schema: {
+        response: {
+          200: tableDtoDetailsRes
+        }
+      }
+    },
+    async (_, reply) => {
+      const tables = await tableController.getTablesDetailNow();
+      reply.send({
+        data: tables,
+        message: 'Lấy danh sách bàn thành công!'
       });
     }
   );

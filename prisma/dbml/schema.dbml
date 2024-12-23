@@ -70,6 +70,7 @@ Table dish_combo {
 Table dish_group {
   id String [pk]
   name String [unique, not null]
+  sortOrder Int [not null, default: 0]
   dishes dish [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]

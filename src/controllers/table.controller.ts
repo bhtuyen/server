@@ -1,6 +1,7 @@
 import type { CreateTable, UpdateTable } from '@/schemaValidations/table.schema';
 
 import prisma from '@/database';
+import { selectTableDtoDetail } from '@/schemaValidations/order.schema';
 import { selectTableDto } from '@/schemaValidations/table.schema';
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors';
 import { randomId } from '@/utils/helpers';
@@ -85,6 +86,7 @@ class TableController {
             data: {
               status: data.status,
               capacity: data.capacity,
+              number: data.number,
               token
             },
             select: selectTableDto
@@ -108,7 +110,8 @@ class TableController {
       },
       data: {
         status: data.status,
-        capacity: data.capacity
+        capacity: data.capacity,
+        number: data.number
       },
       select: selectTableDto
     });
@@ -127,6 +130,50 @@ class TableController {
       },
       select: selectTableDto
     });
+  };
+
+  /**
+   * @description Get tables detail now
+   * @returns
+   * @buihuytuyen
+   */
+  getTablesDetailNow = async () => {
+    const tables = await prisma.table.findMany({
+      select: selectTableDtoDetail,
+      orderBy: {
+        number: 'asc'
+      }
+    });
+
+    tables.forEach((table) => {
+      table.orders = table.orders.filter((order) => order.token === table.token);
+      table.guests = table.guests.filter((guest) => guest.token === table.token);
+    });
+
+    return tables;
+  };
+
+  /**
+   * @description Get table detail now
+   * @param tableNumber
+   * @returns
+   * @buihuytuyen
+   */
+  getTableDetailNow = async (tableNumber: string) => {
+    const table = await prisma.table.findFirstOrThrow({
+      select: selectTableDtoDetail,
+      orderBy: {
+        number: 'asc'
+      },
+      where: {
+        number: tableNumber
+      }
+    });
+
+    table.orders = table.orders.filter((order) => order.token === table.token);
+    table.guests = table.guests.filter((guest) => guest.token === table.token);
+
+    return table;
   };
 }
 export default new TableController();

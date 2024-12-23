@@ -97,6 +97,7 @@ model DishCombo {
 model DishGroup {
   id        String   @id @default(uuid()) @map("group_id") @db.Char(36)
   name      String   @unique @map("group_name") @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
   dishes    Dish[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

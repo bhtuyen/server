@@ -82,6 +82,13 @@ export const orderDtoDetailRes = buildReply(orderDtoDetail);
 export const payOrders = z.object({
   tableNumber: z.string().trim().min(1).max(50)
 });
+export const tableDtoDetail = tableDto.extend({
+  orders: z.array(orderDtoDetail),
+  guests: z.array(guestDto)
+});
+export const tableDtoDetailsRes = buildReply(z.array(tableDtoDetail));
+export const tableDtoDetailRes = buildReply(tableDtoDetail);
+export const selectTableDtoDetail = buildSelect(tableDtoDetail);
 
 export type UpdateOrder = z.TypeOf<typeof updateOrder>;
 export type CreateOrders = z.TypeOf<typeof createOrders>;
@@ -89,3 +96,6 @@ export type TableNumberParam = z.TypeOf<typeof tableNumberParam>;
 export type GuestPayOrders = z.TypeOf<typeof payOrders>;
 export type OrderDtoDetailRes = z.TypeOf<typeof orderDtoDetailRes>;
 export type OrdersDtoDetailRes = z.TypeOf<typeof ordersDtoDetailRes>;
+export type TableDtoDetailsRes = z.TypeOf<typeof tableDtoDetailsRes>;
+export type TableDtoDetailRes = z.TypeOf<typeof tableDtoDetailRes>;
+export type TableDtoDetail = z.TypeOf<typeof tableDtoDetail>;
