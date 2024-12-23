@@ -39,12 +39,6 @@ const configSchema = z.object({
   PRODUCTION: z.enum(['true', 'false']).transform((val) => val === 'true'),
   PRODUCTION_URL: z.string(),
   SERVER_TIMEZONE: z.string(),
-  GOOGLE_BUCKET_TYPE: z.string(),
-  GOOGLE_BUCKET_PROJECT_ID: z.string(),
-  GOOGLE_BUCKET_PRIVATE_KEY_ID: z.string(),
-  GOOGLE_BUCKET_PRIVATE_KEY: z.string(),
-  GOOGLE_BUCKET_CLIENT_MAIL: z.string(),
-  GOOGLE_BUCKET_CLIENT_ID: z.string(),
   GOOGLE_BUCKET_NAME: z.string()
 });
 
