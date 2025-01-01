@@ -1,4 +1,4 @@
-import { TableStatus } from '@prisma/client';
+import { PaymentStatus, TableStatus } from '@prisma/client';
 import z from 'zod';
 
 import { buildReply, id, updateAndCreate } from '@/schemaValidations/common.schema';
@@ -10,6 +10,7 @@ import { buildSelect } from '@/utils/helpers';
 const table = z
   .object({
     number: z.string().trim().min(1).max(50),
+    paymentStatus: z.nativeEnum(PaymentStatus).default(PaymentStatus.Unpaid),
     capacity: z.coerce.number().positive(),
     status: z.nativeEnum(TableStatus),
     token: z.string()

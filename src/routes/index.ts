@@ -7,5 +7,17 @@ import mediaRoutes from '@/routes/media.route';
 import orderRoutes from '@/routes/order.route';
 import staticRoutes from '@/routes/static.route';
 import tablesRoutes from '@/routes/table.route';
+import transactionRoutes from '@/routes/transaction.route';
 
-export { accountRoutes, authRoutes, dishRoutes, guestRoutes, indicatorRoutes, mediaRoutes, orderRoutes, staticRoutes, tablesRoutes };
+export {
+  accountRoutes,
+  authRoutes,
+  dishRoutes,
+  guestRoutes,
+  indicatorRoutes,
+  mediaRoutes,
+  orderRoutes,
+  staticRoutes,
+  tablesRoutes,
+  transactionRoutes
+};

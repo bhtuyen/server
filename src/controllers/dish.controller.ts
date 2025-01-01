@@ -233,7 +233,10 @@ class DishController {
         where: {
           id
         },
-        data
+        data: {
+          ...data,
+          price: data.price ?? null
+        }
       });
 
       const taskCreateMany = prisma.dishCombo.createMany({

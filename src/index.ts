@@ -13,7 +13,18 @@ import autoRemoveRefreshTokenJob from '@/jobs/autoRemoveRefreshToken.job';
 import { errorHandlerPlugin } from '@/plugins/errorHandler.plugins';
 import { socketPlugin } from '@/plugins/socket.plugins';
 import validatorCompilerPlugin from '@/plugins/validatorCompiler.plugins';
-import { accountRoutes, authRoutes, dishRoutes, guestRoutes, indicatorRoutes, mediaRoutes, orderRoutes, staticRoutes, tablesRoutes } from '@/routes';
+import {
+  accountRoutes,
+  authRoutes,
+  dishRoutes,
+  guestRoutes,
+  indicatorRoutes,
+  mediaRoutes,
+  orderRoutes,
+  staticRoutes,
+  tablesRoutes,
+  transactionRoutes
+} from '@/routes';
 import { createFolder } from '@/utils/helpers';
 
 const fastify = Fastify({
@@ -86,6 +97,9 @@ const start = async () => {
     });
     fastify.register(indicatorRoutes, {
       prefix: '/indicators'
+    });
+    fastify.register(transactionRoutes, {
+      prefix: '/transactions'
     });
     await accountController.initOwnerAccount();
     await fastify.listen({

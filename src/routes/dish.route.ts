@@ -146,7 +146,6 @@ export default async function dishRoutes(fastify: FastifyInstance) {
       })
     },
     async (request, reply) => {
-      console.log(request.body);
       const data = await dishController.createDish(request.body);
 
       reply.send({

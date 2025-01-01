@@ -190,6 +190,33 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
    * @buihuytuyen
    */
   fastify.get<{
+    Reply: TableDtoDetailRes;
+    Params: TableNumberParam;
+  }>(
+    '/detail-payment/:tableNumber',
+    {
+      schema: {
+        params: tableNumberParam,
+        response: {
+          200: tableDtoDetailRes
+        }
+      }
+    },
+    async (request, reply) => {
+      const tableNumber = request.params.tableNumber;
+      const table = await tableController.getTableDetailPayment(tableNumber);
+      reply.send({
+        data: table,
+        message: 'Lấy thông tin bàn thành công!'
+      });
+    }
+  );
+
+  /**
+   * @description get tables detail now
+   * @buihuytuyen
+   */
+  fastify.get<{
     Reply: TableDtoDetailsRes;
   }>(
     '/detail-now',

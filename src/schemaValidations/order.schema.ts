@@ -56,7 +56,6 @@ export const updateOrder = orderDto
     status: true,
     quantity: true,
     options: true,
-    orderHandlerId: true,
     id: true
   })
   .merge(

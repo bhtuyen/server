@@ -234,8 +234,8 @@ class OrderController {
    * @returns order detail and socketId after updated order by orderId and body
    * @buihuytuyen
    */
-  update = async ({ id, ...data }: UpdateOrder) => {
-    const { status, dishId, quantity, orderHandlerId, options } = data;
+  update = async ({ id, ...data }: UpdateOrder, orderHandlerId: string) => {
+    const { status, dishId, quantity, options } = data;
     const result = await prisma.$transaction(async (tx) => {
       const order = await prisma.order.findUniqueOrThrow({
         where: {

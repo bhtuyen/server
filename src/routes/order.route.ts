@@ -158,16 +158,20 @@ export default async function orderRoutes(fastify: FastifyInstance) {
       })
     },
     async (request, reply) => {
-      const { order, socketIds } = await orderController.update({ ...request.body, id: request.params.id });
-      if (socketIds.length > 0) {
-        fastify.io.to(ManagerRoom).to(socketIds).emit('update-order', order);
-      } else {
-        fastify.io.to(ManagerRoom).emit('update-order', order);
+      const role = request.decodedAccessToken?.role;
+      if (role !== GuestOrderRole && request.decodedAccessToken) {
+        const accountId = request.decodedAccessToken.accountId;
+        const { order, socketIds } = await orderController.update({ ...request.body, id: request.params.id }, accountId);
+        if (socketIds.length > 0) {
+          fastify.io.to(ManagerRoom).to(socketIds).emit('update-order', order);
+        } else {
+          fastify.io.to(ManagerRoom).emit('update-order', order);
+        }
+        reply.send({
+          message: 'Cập nhật đơn hàng thành công',
+          data: order
+        });
       }
-      reply.send({
-        message: 'Cập nhật đơn hàng thành công',
-        data: order
-      });
     }
   );
 

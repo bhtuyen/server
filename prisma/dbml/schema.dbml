@@ -11,7 +11,7 @@ Table account {
   role Role [not null, default: 'Employee']
   phone String [not null]
   isVerified Boolean [not null, default: false]
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   updatedAt DateTime [not null]
   employees account [not null]
   owner account
@@ -30,7 +30,7 @@ Table dish {
   status DishStatus [not null, default: 'Available']
   category DishCategory [not null, default: 'Paid']
   options String
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   updatedAt DateTime [not null]
   groupId String [not null]
   group dish_group [not null]
@@ -48,7 +48,7 @@ Table dish_snapshot {
   status DishStatus [not null, default: 'Available']
   category DishCategory [not null, default: 'Paid']
   options String
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   updatedAt DateTime [not null]
   order order
   dishId String [not null]
@@ -72,17 +72,18 @@ Table dish_group {
   name String [unique, not null]
   sortOrder Int [not null, default: 0]
   dishes dish [not null]
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   updatedAt DateTime [not null]
 }
 
 Table table {
   id String [pk]
   number String [unique, not null]
+  paymentStatus PaymentStatus [not null, default: 'Unpaid']
   capacity Int [not null, default: 1]
   status TableStatus [not null, default: 'Available']
   token String [not null]
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   updatedAt DateTime [not null]
   orders order [not null]
   guests guest [not null]
@@ -93,7 +94,7 @@ Table order {
   options String
   quantity Int [not null]
   status OrderStatus [not null, default: 'Pending']
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   updatedAt DateTime [not null]
   guestId String
   guest guest
@@ -109,7 +110,7 @@ Table order {
 Table refresh_token {
   token String [pk]
   expiresAt DateTime [not null]
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   accountId String [not null]
   account account [not null]
 }
@@ -118,7 +119,7 @@ Table guest {
   id String [pk]
   refreshToken String [unique]
   expiredAt DateTime
-  createdAt DateTime [default: `now()`, not null]
+  createdAt DateTime [not null]
   updatedAt DateTime [not null]
   tableNumber String [not null]
   table table [not null]
@@ -133,6 +134,23 @@ Table socket {
   guest guest
   accountId String [unique]
   account account
+}
+
+Table transaction {
+  id String [pk]
+  idSePay Int [not null]
+  gateway String [not null]
+  transactionDate DateTime [not null]
+  accountNumber String
+  subAccount String
+  amountIn Decimal [not null, default: 0]
+  amountOut Decimal [not null, default: 0]
+  accumulated Decimal [not null, default: 0]
+  code String
+  transactionContent String
+  referenceNumber String
+  body String
+  createdAt DateTime [not null]
 }
 
 Enum DishStatus {
@@ -166,6 +184,12 @@ Enum OrderStatus {
   Rejected
   Delivered
   Paid
+}
+
+Enum PaymentStatus {
+  Unpaid
+  Paid
+  Cancelled
 }
 
 Ref: account.ownerId > account.id

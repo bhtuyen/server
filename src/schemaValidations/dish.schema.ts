@@ -10,7 +10,7 @@ import { buildSelect } from '@/utils/helpers';
  */
 const dish = z
   .object({
-    price: z.instanceof(Prisma.Decimal).or(z.number()).nullable(),
+    price: z.instanceof(Prisma.Decimal).or(z.number()).nullable().optional(),
     description: z.string().max(10000).nullable(),
     category: z.nativeEnum(DishCategory),
     groupId: z.string().uuid(),

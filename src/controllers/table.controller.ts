@@ -1,3 +1,5 @@
+import { DishCategory, OrderStatus } from '@prisma/client';
+
 import type { CreateTable, UpdateTable } from '@/schemaValidations/table.schema';
 
 import prisma from '@/database';
@@ -171,6 +173,31 @@ class TableController {
     });
 
     table.orders = table.orders.filter((order) => order.token === table.token);
+    table.guests = table.guests.filter((guest) => guest.token === table.token);
+
+    return table;
+  };
+
+  /**
+   * @description Get table detail payment
+   * @param tableNumber
+   * @returns
+   * @buihuytuyen
+   */
+  getTableDetailPayment = async (tableNumber: string) => {
+    const table = await prisma.table.findFirstOrThrow({
+      select: selectTableDtoDetail,
+      orderBy: {
+        number: 'asc'
+      },
+      where: {
+        number: tableNumber
+      }
+    });
+
+    table.orders = table.orders.filter(
+      (order) => order.token === table.token && order.status != OrderStatus.Rejected && order.dishSnapshot.category !== DishCategory.Buffet
+    );
     table.guests = table.guests.filter((guest) => guest.token === table.token);
 
     return table;
