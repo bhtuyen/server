@@ -40,5 +40,5 @@ jobs:
             docker pull 090920019999/server:v0
             docker stop server
             docker rm server
-            docker run -dp 4000:4000 --name server 090920019999/server:v0 --restart unless-stopped
+            docker run -dp 4000:4000 --name server 090920019999/server:v0
             docker image prune -f
