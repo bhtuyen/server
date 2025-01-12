@@ -28,7 +28,6 @@ import {
 import { createFolder } from '@/utils/helpers';
 
 const fastify = Fastify({
-  logger: false
   // logger: {
   //   level: 'info',
   //   transport: {
@@ -40,6 +39,7 @@ const fastify = Fastify({
   //     }
   //   }
   // }
+  logger: false
 });
 
 // Run the server!

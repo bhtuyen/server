@@ -1,6 +1,6 @@
 import type { Logout, RefreshToken, RefreshTokenRes } from '@/schemaValidations/auth.schema';
 import type { MessageRes, Period } from '@/schemaValidations/common.schema';
-import type { GuestCreateOrders, GuestLogin, GuestLoginRes, GuestsRes } from '@/schemaValidations/guest.schema';
+import type { CallStaff, GuestCreateOrders, GuestLogin, GuestLoginRes, GuestsRes, RequestPayment } from '@/schemaValidations/guest.schema';
 import type { OrdersDtoDetailRes } from '@/schemaValidations/order.schema';
 import type { FastifyInstance } from 'fastify';
 
@@ -9,7 +9,7 @@ import guestController from '@/controllers/guest.controller';
 import { requireEmployeeHook, requireGuestOrderHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
 import { logout, refreshToken, refreshTokenRes } from '@/schemaValidations/auth.schema';
 import { message, messageRes, period } from '@/schemaValidations/common.schema';
-import { guestCreateOrders, guestLogin, guestLoginRes, guestsRes } from '@/schemaValidations/guest.schema';
+import { callStaff, guestCreateOrders, guestLogin, guestLoginRes, guestsRes, requestPayment } from '@/schemaValidations/guest.schema';
 import { ordersDtoDetailRes } from '@/schemaValidations/order.schema';
 
 export default async function guestRoutes(fastify: FastifyInstance) {
@@ -157,6 +157,60 @@ export default async function guestRoutes(fastify: FastifyInstance) {
       reply.send({
         message: 'Lấy danh sách khách thành công',
         data: result
+      });
+    }
+  );
+
+  /**
+   * @description Request payment
+   * @buihuytuyen
+   */
+  fastify.post<{
+    Reply: MessageRes;
+    Body: RequestPayment;
+  }>(
+    '/request-payment',
+    {
+      schema: {
+        response: {
+          200: messageRes
+        },
+        body: requestPayment
+      },
+      preValidation: fastify.auth([requireLoginedHook, requireGuestOrderHook])
+    },
+    async (request, reply) => {
+      await guestController.requestPayment(request.body.tableNumber);
+      fastify.io.to(ManagerRoom).emit('request-payment', request.body.tableNumber);
+      reply.send({
+        message: 'request-payment-success'
+      });
+    }
+  );
+
+  /**
+   * @description Request payment
+   * @buihuytuyen
+   */
+  fastify.post<{
+    Reply: MessageRes;
+    Body: CallStaff;
+  }>(
+    '/call-staff',
+    {
+      schema: {
+        response: {
+          200: messageRes
+        },
+        body: callStaff
+      },
+      preValidation: fastify.auth([requireLoginedHook, requireGuestOrderHook])
+    },
+    async (request, reply) => {
+      await guestController.callStaff(request.body.tableNumber);
+      fastify.io.to(ManagerRoom).emit('call-staff', request.body.tableNumber);
+      reply.send({
+        message: 'call-staff-success'
       });
     }
   );

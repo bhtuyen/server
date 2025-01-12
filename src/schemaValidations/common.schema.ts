@@ -23,6 +23,12 @@ export const id = z.object({
 
 export const idParam = id.pick({ id: true });
 
+export const idOrNumberParam = z.object({
+  idOrNumber: z.string().uuid().or(z.string().trim().min(1).max(50))
+});
+
+export type IdOrNumberParam = z.TypeOf<typeof idOrNumberParam>;
+
 export type IdParam = z.TypeOf<typeof idParam>;
 
 export const name = z.object({

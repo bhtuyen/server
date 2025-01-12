@@ -63,7 +63,7 @@ class IndicatorController {
 
     // Thống kê món ăn
     const dishesIndicatorObj = dishes.reduce<Record<string, DishIndicator>>((acc, dish) => {
-      acc[dish.id] = { ...dish, successOrders: 0 };
+      acc[dish.id] = { ...dish, price: Number(dish.price), successOrders: 0 };
       return acc;
     }, {});
 

@@ -13,6 +13,9 @@ const table = z
     paymentStatus: z.nativeEnum(PaymentStatus).default(PaymentStatus.Unpaid),
     capacity: z.coerce.number().positive(),
     status: z.nativeEnum(TableStatus),
+    dishBuffetId: z.string().uuid().nullable(),
+    requestPayment: z.boolean(),
+    callStaff: z.boolean(),
     token: z.string()
   })
   .merge(updateAndCreate)
@@ -28,6 +31,11 @@ export const tableParam = tableDto.pick({ number: true });
 export const updateTable = tableDto.omit({ token: true }).extend({ changeToken: z.boolean() });
 export const selectTableDto = buildSelect(tableDto);
 
+export const modeBuffet = z.object({
+  dishBuffetId: z.string().uuid().nullable(),
+  tableNumber: z.string().trim().min(1).max(50)
+});
+
 /**
  * Type
  */
@@ -37,3 +45,4 @@ export type TablesRes = z.TypeOf<typeof tablesRes>;
 export type UpdateTable = z.TypeOf<typeof updateTable>;
 export type TableParam = z.TypeOf<typeof tableParam>;
 export type TableDto = z.TypeOf<typeof tableDto>;
+export type ModeBuffet = z.TypeOf<typeof modeBuffet>;

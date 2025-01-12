@@ -253,7 +253,7 @@ class AccountController {
     });
     const isSame = await comparePassword(body.oldPassword, account.password);
     if (!isSame) {
-      throw new EntityError([{ field: 'oldPassword', message: 'Mật khẩu cũ không đúng' }]);
+      throw new EntityError([{ field: 'oldPassword', message: 'old-password-invalid' }]);
     }
     const hashedPassword = await hashPassword(body.password);
     const newAccount = await prisma.account.update({

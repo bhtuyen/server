@@ -266,6 +266,7 @@ class OrderController {
         });
         dishSnapshotId = dishSnapshot.id;
       }
+
       const newOrder = await tx.order.update({
         where: {
           id
@@ -279,6 +280,15 @@ class OrderController {
         },
         select: selectOrderDtoDetail
       });
+
+      if (order.dishSnapshot.dishId !== dishId) {
+        await tx.dishSnapshot.delete({
+          where: {
+            id: order.dishSnapshotId
+          }
+        });
+      }
+
       return newOrder;
     });
 
@@ -296,6 +306,7 @@ class OrderController {
         }
       }
     });
+
     return {
       order: result,
       socketIds: sockets.map(({ socketId }) => socketId)

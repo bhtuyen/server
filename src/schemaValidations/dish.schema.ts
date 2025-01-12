@@ -22,6 +22,8 @@ const dish = z
   .merge(id)
   .merge(name);
 
+export type Dish = z.TypeOf<typeof dish>;
+
 const dishSnapshot = dish
   .extend({
     dishId: z.string().uuid()

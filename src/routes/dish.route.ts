@@ -20,6 +20,7 @@ import {
   createDishCombo,
   createDishGroup,
   dishDtoComboDetailRes,
+  dishDtoComboDetailsRes,
   dishDtoDetailChooseRes,
   dishesRes,
   dishGroupRes,
@@ -115,14 +116,52 @@ export default async function dishRoutes(fastify: FastifyInstance) {
    */
   fastify.get<{
     Reply: DishDtoComboDetailsRes;
-  }>('/order', async (_, reply) => {
-    const data = await dishController.getDishToOrder();
+  }>(
+    '/order',
+    {
+      schema: {
+        response: {
+          200: dishDtoComboDetailsRes
+        }
+      }
+    },
+    async (_, reply) => {
+      const data = await dishController.getDishToOrder();
 
-    reply.send({
-      data,
-      message: 'Lấy danh sách món ăn thành công!'
-    });
-  });
+      reply.send({
+        data,
+        message: 'Lấy danh sách món ăn thành công!'
+      });
+    }
+  );
+
+  /**
+   * @description Get dish to order
+   * @buihuytuyen
+   */
+  fastify.get<{
+    Params: IdParam;
+    Reply: DishDtoComboDetailsRes;
+  }>(
+    '/buffet/:id',
+    {
+      schema: {
+        params: idParam,
+        response: {
+          200: dishDtoComboDetailsRes
+        }
+      }
+    },
+    async (request, reply) => {
+      const id = request.params.id;
+      const data = await dishController.getDishBuffet(id);
+
+      reply.send({
+        data,
+        message: 'Lấy danh sách món ăn thành công!'
+      });
+    }
+  );
 
   /**
    * @description Create dish

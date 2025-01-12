@@ -269,6 +269,28 @@ class GuestController {
     });
     return guests;
   };
+
+  requestPayment = async (tableNumber: string) => {
+    await prisma.table.update({
+      where: {
+        number: tableNumber
+      },
+      data: {
+        requestPayment: true
+      }
+    });
+  };
+
+  callStaff = async (tableNumber: string) => {
+    await prisma.table.update({
+      where: {
+        number: tableNumber
+      },
+      data: {
+        callStaff: true
+      }
+    });
+  };
 }
 
 export default new GuestController();

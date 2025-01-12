@@ -22,8 +22,8 @@ model Account {
   avatar    String?  @db.VarChar(255)
   role      Role     @default(Employee)
   phone     String   @db.VarChar(50)
-  createdAt DateTime @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
-  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime()
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   employees Account[] @relation("OwnerEmployee")
 
@@ -48,8 +48,8 @@ model Dish {
   status      DishStatus   @default(Available)
   category    DishCategory @default(Paid)
   options     String?      @db.Text
-  createdAt   DateTime     @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
-  updatedAt   DateTime     @updatedAt @map("updated_at") @db.DateTime()
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
   groupId String    @map("group_id") @db.Char(36)
   group   DishGroup @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: Cascade)
@@ -71,8 +71,8 @@ model DishSnapshot {
   status      DishStatus   @default(Available)
   category    DishCategory @default(Paid)
   options     String?      @db.Text
-  createdAt   DateTime     @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
-  updatedAt   DateTime     @updatedAt @map("updated_at") @db.DateTime()
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
   order  Order?
   dishId String @map("dish_id") @db.Char(36)
@@ -98,21 +98,24 @@ model DishGroup {
   name      String   @unique @map("group_name") @db.VarChar(255)
   sortOrder Int      @default(0) @map("sort_order") @db.Int()
   dishes    Dish[]
-  createdAt DateTime @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
-  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime()
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("dish_group")
 }
 
 model Table {
-  id            String        @id @default(uuid()) @map("table_id") @db.Char(36)
-  number        String        @unique @map("table_number") @db.VarChar(50)
-  paymentStatus PaymentStatus @default(Unpaid)
-  capacity      Int           @default(1) @db.Int()
-  status        TableStatus   @default(Available)
-  token         String        @db.VarChar(255)
-  createdAt     DateTime      @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
-  updatedAt     DateTime      @updatedAt @map("updated_at") @db.DateTime()
+  id             String        @id @default(uuid()) @map("table_id") @db.Char(36)
+  number         String        @unique @map("table_number") @db.VarChar(50)
+  paymentStatus  PaymentStatus @default(Unpaid)
+  capacity       Int           @default(1) @db.Int()
+  status         TableStatus   @default(Available)
+  token          String        @db.VarChar(255)
+  dishBuffetId   String?       @map("dish_buffet_id") @db.Char(36)
+  requestPayment Boolean       @default(false) @map("request_payment")
+  callStaff      Boolean       @default(false) @map("call_staff")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   orders Order[]
   guests Guest[]
@@ -125,8 +128,8 @@ model Order {
   options   String?     @db.Text
   quantity  Int         @db.Int()
   status    OrderStatus @default(Pending)
-  createdAt DateTime    @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
-  updatedAt DateTime    @updatedAt @map("updated_at") @db.DateTime()
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
 
   guestId String? @map("guest_id") @db.Char(36)
   guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -146,8 +149,8 @@ model Order {
 
 model RefreshToken {
   token     String   @id @db.VarChar(500)
-  expiresAt DateTime @map("expires_at") @db.DateTime()
-  createdAt DateTime @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   accountId String  @map("account_id") @db.Char(36)
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -158,9 +161,9 @@ model RefreshToken {
 model Guest {
   id           String    @id @default(uuid()) @map("guest_id") @db.Char(36)
   refreshToken String?   @unique @map("refresh_token") @db.VarChar(500)
-  expiredAt    DateTime? @map("expired_at") @db.DateTime()
-  createdAt    DateTime  @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime()
+  expiredAt    DateTime? @map("expired_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   tableNumber String @map("table_number") @db.VarChar(50)
   table       Table  @relation(fields: [tableNumber], references: [number], onDelete: NoAction, onUpdate: Cascade)
@@ -189,7 +192,7 @@ model Transaction {
   id                 String   @id @default(uuid()) @map("transaction_id") @db.Char(36)
   idSePay            Int      @map("id_sepay") @db.Int()
   gateway            String   @db.VarChar(100)
-  transactionDate    DateTime @default(dbgenerated("now()")) @map("transaction_date") @db.DateTime()
+  transactionDate    DateTime @default(now()) @map("transaction_date")
   accountNumber      String?  @map("account_number") @db.VarChar(100)
   subAccount         String?  @map("sub_account") @db.VarChar(250)
   amountIn           Decimal  @default(0) @map("amount_in") @db.Decimal(18, 4)
@@ -199,7 +202,7 @@ model Transaction {
   transactionContent String?  @map("transaction_content") @db.Text
   referenceNumber    String?  @map("reference_number") @db.VarChar(255)
   body               String?  @map("body") @db.Text
-  createdAt          DateTime @default(dbgenerated("now()")) @map("created_at") @db.DateTime()
+  createdAt          DateTime @default(now()) @map("created_at")
 
   @@map("transaction")
 }

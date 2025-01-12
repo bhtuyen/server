@@ -94,6 +94,36 @@ class DishController {
   };
 
   /**
+   *
+   * @param dishBuffetId
+   * @returns
+   */
+  getDishBuffet = async (dishBuffetId: string) => {
+    return await prisma.dish.findMany({
+      where: {
+        category: DishCategory.Buffet,
+        combos: {
+          some: {
+            comboId: dishBuffetId
+          }
+        }
+      },
+      orderBy: [
+        {
+          group: {
+            sortOrder: 'asc'
+          }
+        },
+        {
+          price: 'asc'
+        }
+      ],
+
+      select: selectDishDtoComboDetail
+    });
+  };
+
+  /**
    * @description Create dish
    * @param data
    * @returns

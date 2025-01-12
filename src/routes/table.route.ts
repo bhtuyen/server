@@ -1,13 +1,13 @@
-import type { IdParam } from '@/schemaValidations/common.schema';
+import type { IdOrNumberParam, IdParam } from '@/schemaValidations/common.schema';
 import type { TableDtoDetailRes, TableNumberParam } from '@/schemaValidations/order.schema';
-import type { CreateTable, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
+import type { CreateTable, ModeBuffet, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
 import type { FastifyInstance } from 'fastify';
 
 import tableController from '@/controllers/table.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import { idParam } from '@/schemaValidations/common.schema';
+import { idOrNumberParam, idParam } from '@/schemaValidations/common.schema';
 import { tableDtoDetailRes, tableDtoDetailsRes, tableNumberParam, type TableDtoDetailsRes } from '@/schemaValidations/order.schema';
-import { createTable, tableRes, tablesRes, updateTable } from '@/schemaValidations/table.schema';
+import { createTable, modeBuffet, tableRes, tablesRes, updateTable } from '@/schemaValidations/table.schema';
 
 export default async function tablesRoutes(fastify: FastifyInstance) {
   /**
@@ -35,26 +35,26 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
   );
 
   /**
-   * @description get table by number
+   * @description get table by id or number
    * @buihuytuyen
    */
   fastify.get<{
-    Params: IdParam;
+    Params: IdOrNumberParam;
     Reply: TableRes;
   }>(
-    '/:id',
+    '/:idOrNumber',
     {
       schema: {
-        params: idParam,
+        params: idOrNumberParam,
         response: {
           200: tableRes
         }
       }
     },
     async (request, reply) => {
-      const table = await tableController.getTableDetail(request.params.id);
+      const table = await tableController.getTableDetail(request.params.idOrNumber);
       reply.send({
-        data: table,
+        data: table[0],
         message: 'Lấy thông tin bàn thành công!'
       });
     }
@@ -121,7 +121,7 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
       const table = await tableController.updateTable({ ...request.body, id: request.params.id });
       reply.send({
         data: table,
-        message: 'Cập nhật bàn thành công!'
+        message: 'update-table-success'
       });
     }
   );
@@ -173,7 +173,11 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
         response: {
           200: tableDtoDetailRes
         }
-      }
+      },
+      /**
+       * Login AND (Owner OR Employee) AND Pause API
+       */
+      preValidation: fastify.auth([requireLoginedHook])
     },
     async (request, reply) => {
       const tableNumber = request.params.tableNumber;
@@ -200,7 +204,13 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
         response: {
           200: tableDtoDetailRes
         }
-      }
+      },
+      /**
+       * Login AND (Owner OR Employee) AND Pause API
+       */
+      preValidation: fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const tableNumber = request.params.tableNumber;
@@ -225,13 +235,58 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
         response: {
           200: tableDtoDetailsRes
         }
-      }
+      },
+      /**
+       * Login AND (Owner OR Employee) AND Pause API
+       */
+      preValidation: fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (_, reply) => {
       const tables = await tableController.getTablesDetailNow();
       reply.send({
         data: tables,
         message: 'Lấy danh sách bàn thành công!'
+      });
+    }
+  );
+
+  /**
+   * @description update mode buffet
+   * @buihuytuyen
+   */
+  fastify.put<{
+    Reply: TableRes;
+    Body: ModeBuffet;
+  }>(
+    '/buffet-mode',
+    {
+      schema: {
+        body: modeBuffet,
+        response: {
+          200: tableRes
+        }
+      },
+      /**
+       * Login AND (Owner OR Employee) AND Pause API
+       */
+      preValidation: fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
+    },
+    async (request, reply) => {
+      const result = await tableController.updateBuffetMode(request.body);
+
+      const { table, dishBuffetId, socketIds } = result;
+
+      if (socketIds.length > 0) {
+        fastify.io.to(socketIds).emit('buffet-mode', dishBuffetId);
+      }
+
+      reply.send({
+        data: table,
+        message: dishBuffetId ? 'on-buffet-mode' : 'off-buffet-mode'
       });
     }
   );

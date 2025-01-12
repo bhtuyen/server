@@ -23,8 +23,18 @@ export const guestLoginRes = buildReply(
 );
 export const selectGuestDto = buildSelect(guestDto);
 
+export const requestPayment = z.object({
+  tableNumber: z.string()
+});
+
+export const callStaff = z.object({
+  tableNumber: z.string()
+});
+
 export type GuestDto = z.TypeOf<typeof guestDto>;
 export type GuestsRes = z.TypeOf<typeof guestsRes>;
 export type GuestLogin = z.TypeOf<typeof guestLogin>;
 export type GuestLoginRes = z.TypeOf<typeof guestLoginRes>;
 export type GuestCreateOrders = z.TypeOf<typeof guestCreateOrders>;
+export type CallStaff = z.TypeOf<typeof callStaff>;
+export type RequestPayment = z.TypeOf<typeof requestPayment>;

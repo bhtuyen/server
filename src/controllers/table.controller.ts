@@ -1,7 +1,8 @@
 import { DishCategory, OrderStatus } from '@prisma/client';
 
-import type { CreateTable, UpdateTable } from '@/schemaValidations/table.schema';
+import type { CreateTable, UpdateTable, ModeBuffet } from '@/schemaValidations/table.schema';
 
+import { PrismaErrorCode } from '@/constants/error-reference';
 import prisma from '@/database';
 import { selectTableDtoDetail } from '@/schemaValidations/order.schema';
 import { selectTableDto } from '@/schemaValidations/table.schema';
@@ -29,10 +30,21 @@ class TableController {
    * @returns
    * @buihuytuyen
    */
-  getTableDetail = (id: string) => {
-    return prisma.table.findUniqueOrThrow({
+  getTableDetail = (idOrNumber: string) => {
+    return prisma.table.findMany({
       where: {
-        id
+        OR: [
+          {
+            id: {
+              equals: idOrNumber
+            }
+          },
+          {
+            number: {
+              equals: idOrNumber
+            }
+          }
+        ]
       },
       select: selectTableDto
     });
@@ -56,10 +68,10 @@ class TableController {
       });
       return result;
     } catch (error) {
-      if (isPrismaClientKnownRequestError(error) && error.code === 'P2002') {
+      if (isPrismaClientKnownRequestError(error) && error.code === PrismaErrorCode.UniqueConstraintViolation) {
         throw new EntityError([
           {
-            message: 'Số bàn này đã tồn tại',
+            message: 'table-number-exist',
             field: 'number'
           }
         ]);
@@ -75,48 +87,62 @@ class TableController {
    * @returns
    * @buihuytuyen
    */
-  updateTable = ({ id, ...data }: UpdateTable) => {
-    if (data.changeToken) {
-      const token = randomId();
-      // Xóa hết các refresh token của guest theo table
-      return prisma.$transaction(async (tx) => {
-        const [table] = await Promise.all([
-          tx.table.update({
-            where: {
-              id
-            },
-            data: {
-              status: data.status,
-              capacity: data.capacity,
-              number: data.number,
-              token
-            },
-            select: selectTableDto
-          }),
-          tx.guest.updateMany({
-            where: {
-              id
-            },
-            data: {
-              refreshToken: null,
-              expiredAt: null
-            }
-          })
-        ]);
-        return table;
+  updateTable = async ({ id, ...data }: UpdateTable) => {
+    try {
+      if (data.changeToken) {
+        const token = randomId();
+        // Xóa hết các refresh token của guest theo table
+        return prisma.$transaction(async (tx) => {
+          const [table] = await Promise.all([
+            tx.table.update({
+              where: {
+                id
+              },
+              data: {
+                status: data.status,
+                capacity: data.capacity,
+                number: data.number,
+                token
+              },
+              select: selectTableDto
+            }),
+            tx.guest.updateMany({
+              where: {
+                id
+              },
+              data: {
+                refreshToken: null,
+                expiredAt: null
+              }
+            })
+          ]);
+          return table;
+        });
+      }
+      const result = await prisma.table.update({
+        where: {
+          id
+        },
+        data: {
+          status: data.status,
+          capacity: data.capacity,
+          number: data.number
+        },
+        select: selectTableDto
       });
+
+      return result;
+    } catch (error) {
+      if (isPrismaClientKnownRequestError(error) && error.code === PrismaErrorCode.UniqueConstraintViolation) {
+        throw new EntityError([
+          {
+            message: 'table-number-exist',
+            field: 'number'
+          }
+        ]);
+      }
+      throw error;
     }
-    return prisma.table.update({
-      where: {
-        id
-      },
-      data: {
-        status: data.status,
-        capacity: data.capacity,
-        number: data.number
-      },
-      select: selectTableDto
-    });
   };
 
   /**
@@ -201,6 +227,51 @@ class TableController {
     table.guests = table.guests.filter((guest) => guest.token === table.token);
 
     return table;
+  };
+
+  /**
+   *
+   * @param tableNumber
+   * @param dishBuffetId
+   * @returns
+   */
+  updateBuffetMode = async ({ tableNumber, dishBuffetId }: ModeBuffet) => {
+    const { token } = await prisma.table.findFirstOrThrow({
+      where: {
+        number: tableNumber
+      }
+    });
+
+    const table = await prisma.table.update({
+      where: {
+        number: tableNumber
+      },
+      data: {
+        dishBuffetId
+      },
+      select: selectTableDto
+    });
+
+    const guestOfTable = await prisma.guest.findMany({
+      where: {
+        tableNumber,
+        token
+      }
+    });
+
+    const sockets = await prisma.socket.findMany({
+      where: {
+        guestId: {
+          in: guestOfTable.map((guest) => guest.id)
+        }
+      }
+    });
+
+    return {
+      table,
+      socketIds: sockets.map(({ socketId }) => socketId),
+      dishBuffetId
+    };
   };
 }
 export default new TableController();
