@@ -23,9 +23,10 @@ class TransactionController {
       description
     } = data;
 
-    // content: tableNumberBHTtoken
-    const tableNumber = content.split('BHT')[0];
-    const token = content.split('BHT')[1];
+    // content: SEVQRtableNumberBHTtoken
+
+    const tableNumber = content.split('SEVQR')[1].split('BHT')[0];
+    const token = content.split('SEVQR')[1].split('BHT')[1];
 
     const transactionOld = await prisma.transaction.findFirst({
       where: {
