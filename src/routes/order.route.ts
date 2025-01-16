@@ -1,19 +1,12 @@
-import type { IdParam, MessageRes, Period } from '@/schemaValidations/common.schema';
-import type {
-  CreateOrders,
-  GuestPayOrders,
-  OrderDtoDetailRes,
-  OrdersDtoDetailRes,
-  TableNumberParam,
-  UpdateOrder
-} from '@/schemaValidations/order.schema';
+import type { IdParam, Period } from '@/schemaValidations/common.schema';
+import type { CreateOrders, OrderDtoDetailRes, OrdersDtoDetailRes, TableNumberParam, UpdateOrder } from '@/schemaValidations/order.schema';
 import type { FastifyInstance } from 'fastify';
 
 import { GuestOrderRole, ManagerRoom } from '@/constants/const';
 import orderController from '@/controllers/order.controller';
 import { requireEmployeeHook, requireGuestOrderHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import { idParam, messageRes, period } from '@/schemaValidations/common.schema';
-import { createOrders, payOrders, orderDtoDetailRes, ordersDtoDetailRes, updateOrder, tableNumberParam } from '@/schemaValidations/order.schema';
+import { idParam, period } from '@/schemaValidations/common.schema';
+import { createOrders, orderDtoDetailRes, ordersDtoDetailRes, updateOrder, tableNumberParam } from '@/schemaValidations/order.schema';
 
 export default async function orderRoutes(fastify: FastifyInstance) {
   /**
@@ -39,12 +32,12 @@ export default async function orderRoutes(fastify: FastifyInstance) {
         const { accountId } = decodedAccessToken;
         const { socketIds, orders } = await orderController.creates(accountId, body);
         if (socketIds.length > 0) {
-          fastify.io.to(ManagerRoom).to(socketIds).emit('new-order', orders);
+          fastify.io.to(ManagerRoom).to(socketIds).emit('new-order', orders.length, orders[0].tableNumber);
         } else {
-          fastify.io.to(ManagerRoom).emit('new-order', orders);
+          fastify.io.to(ManagerRoom).emit('new-order', orders.length, orders[0].tableNumber);
         }
         reply.send({
-          message: `Tạo thành công ${orders.length} đơn hàng cho khách hàng`,
+          message: 'create-orders-success',
           data: orders
         });
       }
@@ -168,58 +161,10 @@ export default async function orderRoutes(fastify: FastifyInstance) {
           fastify.io.to(ManagerRoom).emit('update-order', order);
         }
         reply.send({
-          message: 'Cập nhật đơn hàng thành công',
+          message: 'update-order-success',
           data: order
         });
       }
-    }
-  );
-
-  /**
-   * @POST /api/orders/pay
-   * @description Pay orders for table
-   * @buihuytuyen
-   */
-  fastify.post<{
-    Body: GuestPayOrders;
-    Reply: {
-      200: OrdersDtoDetailRes;
-      400: MessageRes;
-    };
-  }>(
-    '/pay',
-    {
-      schema: {
-        response: {
-          200: ordersDtoDetailRes,
-          400: messageRes
-        },
-        body: payOrders
-      },
-      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
-        relation: 'and'
-      })
-    },
-    async ({ decodedAccessToken, body: { tableNumber } }, reply) => {
-      if (decodedAccessToken && !(decodedAccessToken.role === GuestOrderRole)) {
-        const { accountId } = decodedAccessToken;
-        const result = await orderController.payForTable({
-          tableNumber: tableNumber,
-          orderHandlerId: accountId
-        });
-        if (result.socketId) {
-          fastify.io.to(result.socketId).to(ManagerRoom).emit('payment', result.orders);
-        } else {
-          fastify.io.to(ManagerRoom).emit('payment', result.orders);
-        }
-        reply.status(200).send({
-          message: `Thanh toán thành công ${result.orders.length} đơn`,
-          data: result.orders
-        });
-      }
-      reply.status(400).send({
-        message: 'Bạn không có quyền thanh toán'
-      });
     }
   );
 }

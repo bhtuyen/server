@@ -1,4 +1,4 @@
-import { DishCategory, OrderStatus } from '@prisma/client';
+import { DishCategory, OrderStatus, PaymentStatus } from '@prisma/client';
 
 import type { CreateTable, UpdateTable, ModeBuffet } from '@/schemaValidations/table.schema';
 
@@ -222,7 +222,7 @@ class TableController {
     });
 
     table.orders = table.orders.filter(
-      (order) => order.token === table.token && order.status != OrderStatus.Rejected && order.dishSnapshot.category !== DishCategory.Buffet
+      (order) => order.token === table.token && order.status == OrderStatus.Delivered && order.dishSnapshot.category !== DishCategory.Buffet
     );
     table.guests = table.guests.filter((guest) => guest.token === table.token);
 
@@ -272,6 +272,24 @@ class TableController {
       socketIds: sockets.map(({ socketId }) => socketId),
       dishBuffetId
     };
+  };
+
+  resetTable = async (tableNumber: string) => {
+    const token = randomId();
+    await prisma.table.update({
+      where: {
+        number: tableNumber
+      },
+      data: {
+        token,
+        dishBuffetId: null,
+        paymentStatus: PaymentStatus.Unpaid,
+        callStaff: false,
+        requestPayment: false
+      },
+      select: selectTableDto
+    });
+    return true;
   };
 }
 export default new TableController();

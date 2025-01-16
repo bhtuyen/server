@@ -38,3 +38,15 @@ export const requireGuestOrderHook = async (request: FastifyRequest) => {
     throw new AuthError('Bạn không có quyền truy cập');
   }
 };
+
+export const requiredSePayKeyHook = async (request: FastifyRequest) => {
+  //Apikey API_KEY_CUA_BAN
+  const sePayKey = request.headers.authorization?.split(' ')[1];
+  if (!sePayKey) {
+    throw new AuthError('Không nhận được API Key');
+  }
+
+  if (sePayKey !== process.env.SEPAY_KEY) {
+    throw new AuthError('API Key không hợp lệ');
+  }
+};

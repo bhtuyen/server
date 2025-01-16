@@ -39,7 +39,8 @@ const configSchema = z.object({
   PRODUCTION: z.enum(['true', 'false']).transform((val) => val === 'true'),
   PRODUCTION_URL: z.string(),
   SERVER_TIMEZONE: z.string(),
-  GOOGLE_BUCKET_NAME: z.string()
+  GOOGLE_BUCKET_NAME: z.string(),
+  SEPAY_KEY: z.string()
 });
 
 const configServer = configSchema.safeParse(process.env);

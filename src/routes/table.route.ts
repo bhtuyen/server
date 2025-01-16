@@ -1,13 +1,13 @@
-import type { IdOrNumberParam, IdParam } from '@/schemaValidations/common.schema';
+import type { IdOrNumberParam, IdParam, MessageRes } from '@/schemaValidations/common.schema';
 import type { TableDtoDetailRes, TableNumberParam } from '@/schemaValidations/order.schema';
-import type { CreateTable, ModeBuffet, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
+import type { CreateTable, ModeBuffet, ResetTable, TableRes, TablesRes, UpdateTable } from '@/schemaValidations/table.schema';
 import type { FastifyInstance } from 'fastify';
 
 import tableController from '@/controllers/table.controller';
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks';
-import { idOrNumberParam, idParam } from '@/schemaValidations/common.schema';
+import { idOrNumberParam, idParam, messageRes } from '@/schemaValidations/common.schema';
 import { tableDtoDetailRes, tableDtoDetailsRes, tableNumberParam, type TableDtoDetailsRes } from '@/schemaValidations/order.schema';
-import { createTable, modeBuffet, tableRes, tablesRes, updateTable } from '@/schemaValidations/table.schema';
+import { createTable, modeBuffet, resetTable, tableRes, tablesRes, updateTable } from '@/schemaValidations/table.schema';
 
 export default async function tablesRoutes(fastify: FastifyInstance) {
   /**
@@ -287,6 +287,37 @@ export default async function tablesRoutes(fastify: FastifyInstance) {
       reply.send({
         data: table,
         message: dishBuffetId ? 'on-buffet-mode' : 'off-buffet-mode'
+      });
+    }
+  );
+
+  /**
+   * @description reset table
+   * @buihuytuyen
+   */
+  fastify.post<{
+    Reply: MessageRes;
+    Body: ResetTable;
+  }>(
+    '/reset',
+    {
+      schema: {
+        body: resetTable,
+        response: {
+          200: messageRes
+        }
+      },
+      /**
+       * Login AND (Owner OR Employee) AND Pause API
+       */
+      preValidation: fastify.auth([requireLoginedHook, pauseApiHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
+    },
+    async (request, reply) => {
+      await tableController.resetTable(request.body.tableNumber);
+      reply.send({
+        message: 'reset-table-success'
       });
     }
   );

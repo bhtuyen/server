@@ -23,6 +23,10 @@ class TransactionController {
       description
     } = data;
 
+    // content: tableNumberBHTtoken
+    const tableNumber = content.split('BHT')[0];
+    const token = content.split('BHT')[1];
+
     const transactionOld = await prisma.transaction.findFirst({
       where: {
         idSePay: id
@@ -30,12 +34,11 @@ class TransactionController {
     });
 
     if (transactionOld) {
-      return true;
+      return {
+        success: true,
+        tableNumber
+      };
     }
-
-    // content: tableNumberBHTtoken
-    const tableNumber = content.split('BHT')[0];
-    const token = content.split('BHT')[1];
 
     const table = await prisma.table.findFirst({
       where: {
@@ -45,23 +48,33 @@ class TransactionController {
     });
 
     if (!table) {
-      return false;
+      return {
+        success: false,
+        tableNumber
+      };
     }
 
     if (table.paymentStatus === PaymentStatus.Paid) {
-      return false;
+      return {
+        success: false,
+        tableNumber
+      };
     }
 
     const ordersOfTable = await prisma.order.findMany({
       where: {
         token,
-        tableNumber: table.number
+        tableNumber: table.number,
+        status: OrderStatus.Delivered
       },
       select: selectOrderDtoDetail
     });
 
     if (ordersOfTable.length === 0) {
-      return false;
+      return {
+        success: false,
+        tableNumber
+      };
     }
 
     const totalAmount = ordersOfTable.reduce((acc, { dishSnapshot: { category, price }, quantity }) => {
@@ -71,7 +84,10 @@ class TransactionController {
     }, 0);
 
     if (totalAmount !== transferAmount) {
-      return false;
+      return {
+        success: false,
+        tableNumber
+      };
     }
 
     const transaction: Transaction = {
@@ -95,7 +111,7 @@ class TransactionController {
         tx.transaction.create({
           data: transaction
         }),
-        await tx.table.update({
+        tx.table.update({
           where: {
             number: table.number,
             token
@@ -107,7 +123,10 @@ class TransactionController {
         tx.order.updateMany({
           where: {
             token,
-            tableNumber: table.number
+            tableNumber: table.number,
+            id: {
+              in: ordersOfTable.map(({ id }) => id)
+            }
           },
           data: {
             status: OrderStatus.Paid
@@ -118,7 +137,10 @@ class TransactionController {
       return true;
     });
 
-    return result;
+    return {
+      success: result,
+      tableNumber
+    };
   };
 }
 

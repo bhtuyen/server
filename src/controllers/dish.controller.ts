@@ -39,9 +39,19 @@ class DishController {
           }
         }
       },
-      orderBy: {
-        createdAt: 'desc'
-      },
+      orderBy: [
+        {
+          group: {
+            name: 'asc'
+          }
+        },
+        {
+          name: 'asc'
+        },
+        {
+          createdAt: 'desc'
+        }
+      ],
       select: selectDishDtoDetail
     });
 
@@ -246,48 +256,60 @@ class DishController {
     }
 
     await prisma.$transaction(async (tx) => {
-      const taskDeleteMany = dishCombosDelete.map(({ comboId, dishId }) =>
-        prisma.dishCombo.delete({
-          where: {
-            dishId_comboId: {
-              comboId,
-              dishId
-            }
-          }
-        })
-      );
-
-      await Promise.all(taskDeleteMany);
-
-      const taskUpdate = prisma.dish.update({
-        where: {
-          id
-        },
-        data: {
-          ...data,
-          price: data.price ?? null
+      try {
+        if (dishCombosDelete.length > 0) {
+          await Promise.all(
+            dishCombosDelete.map(
+              async ({ comboId, dishId }) =>
+                await tx.dishCombo.delete({
+                  where: {
+                    dishId_comboId: {
+                      comboId,
+                      dishId
+                    }
+                  }
+                })
+            )
+          );
         }
-      });
 
-      const taskCreateMany = prisma.dishCombo.createMany({
-        data: dishCombosInsert
-      });
-
-      const updateManyTask = dishCombosUpdate.map(({ comboId, dishId, quantity }) =>
-        prisma.dishCombo.update({
+        await tx.dish.update({
           where: {
-            dishId_comboId: {
-              comboId,
-              dishId
-            }
+            id
           },
           data: {
-            quantity
+            ...data,
+            price: data.price ?? null
           }
-        })
-      );
+        });
 
-      await Promise.all([taskUpdate, taskCreateMany, ...updateManyTask]);
+        if (dishCombosInsert.length > 0) {
+          await tx.dishCombo.createMany({
+            data: dishCombosInsert
+          });
+        }
+
+        if (dishCombosUpdate.length > 0) {
+          await Promise.all(
+            dishCombosUpdate.map(
+              async ({ comboId, dishId, quantity }) =>
+                await tx.dishCombo.update({
+                  where: {
+                    dishId_comboId: {
+                      comboId,
+                      dishId
+                    }
+                  },
+                  data: {
+                    quantity
+                  }
+                })
+            )
+          );
+        }
+      } catch (error) {
+        console.log(error);
+      }
     });
 
     return await prisma.dish.findFirstOrThrow({

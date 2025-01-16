@@ -36,6 +36,10 @@ export const modeBuffet = z.object({
   tableNumber: z.string().trim().min(1).max(50)
 });
 
+export const resetTable = z.object({
+  tableNumber: z.string().trim().min(1).max(50)
+});
+
 /**
  * Type
  */
@@ -46,3 +50,5 @@ export type UpdateTable = z.TypeOf<typeof updateTable>;
 export type TableParam = z.TypeOf<typeof tableParam>;
 export type TableDto = z.TypeOf<typeof tableDto>;
 export type ModeBuffet = z.TypeOf<typeof modeBuffet>;
+
+export type ResetTable = z.TypeOf<typeof resetTable>;

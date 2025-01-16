@@ -44,11 +44,11 @@ class AuthController {
       }
     });
     if (!account) {
-      throw new EntityError([{ field: 'email', message: 'Email không tồn tại' }]);
+      throw new EntityError([{ field: 'email', message: 'email-not-exist' }]);
     }
     const isPasswordMatch = await comparePassword(body.password, account.password);
     if (!isPasswordMatch) {
-      throw new EntityError([{ field: 'password', message: 'Email hoặc mật khẩu không đúng' }]);
+      throw new EntityError([{ field: 'password', message: 'incorrect-email-or-password' }]);
     }
     const accessToken = signAccessToken({
       accountId: account.id,

@@ -119,9 +119,9 @@ export default async function guestRoutes(fastify: FastifyInstance) {
       if (decodedAccessToken && decodedAccessToken.role === GuestOrderRole) {
         const { guestId } = decodedAccessToken;
         const result = await guestController.guestCreateOrders(guestId, body);
-        fastify.io.to(ManagerRoom).emit('new-order', result);
+        fastify.io.to(ManagerRoom).emit('new-order', result.length, result[0].tableNumber);
         reply.status(200).send({
-          message: 'Đặt món thành công',
+          message: 'order-success',
           data: result
         });
       }

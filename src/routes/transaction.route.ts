@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { ManagerRoom } from '@/constants/const';
 import transactionController from '@/controllers/transaction.controller';
+import { requiredSePayKeyHook } from '@/hooks/auth.hooks';
 import {
   transactionWebhook,
   transactionWebhookRes,
@@ -16,15 +17,16 @@ export default async function transactionRoutes(fastify: FastifyInstance) {
       schema: {
         body: transactionWebhook,
         response: {
-          201: transactionWebhookRes
+          200: transactionWebhookRes
         }
-      }
+      },
+      preHandler: fastify.auth([requiredSePayKeyHook])
     },
     async (request, reply) => {
-      const success = await transactionController.webhook(request.body);
+      const { success, tableNumber } = await transactionController.webhook(request.body);
       if (success) {
-        fastify.io.to(ManagerRoom).emit('payment');
-        reply.status(201).send({
+        fastify.io.to(ManagerRoom).emit('payment', tableNumber);
+        reply.status(200).send({
           message: 'Nhận thông tin giao dịch thành công!',
           success
         });
