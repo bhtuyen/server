@@ -25,8 +25,10 @@ class TransactionController {
 
     // content: SEVQRtableNumberBHTtoken
 
-    const tableNumber = content.split('SEVQR')[1].split('BHT')[0];
-    const token = content.split('SEVQR')[1].split('BHT')[1];
+    // CT DEN:501701536197 SEVQR01BHTD46485D97E69426C88EBD6C921B90990-170125-01:08:41 536197
+
+    const tableNumber = content.split(' ')[2].split('-')[0].split('SEVQR')[1].split('BHT')[0];
+    const token = content.split(' ')[2].split('-')[0].split('SEVQR')[1].split('BHT')[1];
 
     const transactionOld = await prisma.transaction.findFirst({
       where: {
