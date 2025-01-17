@@ -6,6 +6,7 @@ import type { TokenPayload } from '@/types/jwt.types';
 
 import envConfig from '@/config';
 import { GuestOrderRole } from '@/constants/const';
+import { prismaOptions } from '@/constants/prisma';
 import prisma from '@/database';
 import { selectDishDto } from '@/schemaValidations/dish.schema';
 import { selectGuestDto, type GuestCreateOrders, type GuestLogin } from '@/schemaValidations/guest.schema';
@@ -242,7 +243,7 @@ class GuestController {
         })
       );
       return orders;
-    });
+    }, prismaOptions);
 
     return result;
   };

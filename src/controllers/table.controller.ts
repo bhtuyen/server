@@ -3,6 +3,7 @@ import { DishCategory, OrderStatus, PaymentStatus } from '@prisma/client';
 import type { CreateTable, UpdateTable, ModeBuffet } from '@/schemaValidations/table.schema';
 
 import { PrismaErrorCode } from '@/constants/error-reference';
+import { prismaOptions } from '@/constants/prisma';
 import prisma from '@/database';
 import { selectTableDtoDetail } from '@/schemaValidations/order.schema';
 import { selectTableDto } from '@/schemaValidations/table.schema';
@@ -18,7 +19,7 @@ class TableController {
   getTableList = () => {
     return prisma.table.findMany({
       orderBy: {
-        createdAt: 'desc'
+        number: 'asc'
       },
       select: selectTableDto
     });
@@ -117,7 +118,7 @@ class TableController {
             })
           ]);
           return table;
-        });
+        }, prismaOptions);
       }
       const result = await prisma.table.update({
         where: {

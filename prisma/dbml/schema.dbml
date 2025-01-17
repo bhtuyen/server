@@ -141,6 +141,7 @@ Table socket {
 Table transaction {
   id String [pk]
   idSePay Int [not null]
+  token String [not null]
   gateway String [not null]
   transactionDate DateTime [default: `now()`, not null]
   accountNumber String

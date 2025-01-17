@@ -93,7 +93,8 @@ export const dishSnapshotDto = dishSnapshot.omit({ createdAt: true, updatedAt: t
 export const createDishGroup = dishGroupDto.pick({ name: true });
 export const dishToChoose = z.object({
   categories: z.array(z.nativeEnum(DishCategory)),
-  ignores: z.array(z.string().uuid())
+  ignores: z.array(z.string().uuid()),
+  comboBuffetId: z.string().uuid().optional().nullable()
 });
 export const dishDtoDetailChoose = dishDtoDetail.extend({
   quantity: z.number().int().min(1).max(20)

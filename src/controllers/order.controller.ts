@@ -2,6 +2,7 @@ import { DishStatus, OrderStatus, TableStatus } from '@prisma/client';
 
 import type { CreateOrders, UpdateOrder } from '@/schemaValidations/order.schema';
 
+import { prismaOptions } from '@/constants/prisma';
 import prisma from '@/database';
 import { selectOrderDtoDetail } from '@/schemaValidations/order.schema';
 
@@ -68,7 +69,7 @@ class OrderController {
         })
       );
       return ordersRecord;
-    });
+    }, prismaOptions);
 
     const guestsOfTable = await prisma.guest.findMany({
       where: {
@@ -219,7 +220,7 @@ class OrderController {
       }
 
       return newOrder;
-    });
+    }, prismaOptions);
 
     const guestsOfTable = await prisma.guest.findMany({
       where: {

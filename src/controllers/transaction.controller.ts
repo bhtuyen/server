@@ -3,6 +3,7 @@ import { DishCategory, OrderStatus, PaymentStatus } from '@prisma/client';
 import type { Transaction, TransactionWebhook } from '@/schemaValidations/transaction.schema';
 
 import { TransactionType } from '@/constants/enum';
+import { prismaOptions } from '@/constants/prisma';
 import prisma from '@/database';
 import { selectOrderDtoDetail } from '@/schemaValidations/order.schema';
 
@@ -25,10 +26,9 @@ class TransactionController {
 
     // content: SEVQRtableNumberBHTtoken
 
-    // CT DEN:501701536197 SEVQR01BHTD46485D97E69426C88EBD6C921B90990-170125-01:08:41 536197
+    // TAB01
 
-    const tableNumber = content.split(' ')[2].split('-')[0].split('SEVQR')[1].split('BHT')[0];
-    const token = content.split(' ')[2].split('-')[0].split('SEVQR')[1].split('BHT')[1];
+    const tableNumber = code?.split('TAB')[1];
 
     const transactionOld = await prisma.transaction.findFirst({
       where: {
@@ -45,8 +45,7 @@ class TransactionController {
 
     const table = await prisma.table.findFirst({
       where: {
-        number: tableNumber,
-        token
+        number: tableNumber
       }
     });
 
@@ -66,7 +65,7 @@ class TransactionController {
 
     const ordersOfTable = await prisma.order.findMany({
       where: {
-        token,
+        token: table.token,
         tableNumber: table.number,
         status: OrderStatus.Delivered
       },
@@ -95,6 +94,7 @@ class TransactionController {
 
     const transaction: Transaction = {
       idSePay: id,
+      token: table.token,
       gateway,
       transactionDate: new Date(transactionDate),
       accountNumber,
@@ -117,7 +117,7 @@ class TransactionController {
         tx.table.update({
           where: {
             number: table.number,
-            token
+            token: table.token
           },
           data: {
             paymentStatus: PaymentStatus.Paid
@@ -125,7 +125,7 @@ class TransactionController {
         }),
         tx.order.updateMany({
           where: {
-            token,
+            token: table.token,
             tableNumber: table.number,
             id: {
               in: ordersOfTable.map(({ id }) => id)
@@ -134,11 +134,23 @@ class TransactionController {
           data: {
             status: OrderStatus.Paid
           }
+        }),
+        tx.order.updateMany({
+          where: {
+            token: table.token,
+            tableNumber: table.number,
+            id: {
+              notIn: ordersOfTable.map(({ id }) => id)
+            }
+          },
+          data: {
+            status: OrderStatus.Rejected
+          }
         })
       ]);
 
       return true;
-    });
+    }, prismaOptions);
 
     return {
       success: result,

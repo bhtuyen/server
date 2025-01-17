@@ -3,6 +3,7 @@ import z from 'zod';
 
 export const transaction = z.object({
   id: z.string().uuid().optional(),
+  token: z.string(),
   idSePay: z.number(),
   gateway: z.string(),
   transactionDate: z.date(),

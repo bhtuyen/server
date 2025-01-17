@@ -191,6 +191,7 @@ model Socket {
 model Transaction {
   id                 String   @id @default(uuid()) @map("transaction_id") @db.Char(36)
   idSePay            Int      @map("id_sepay") @db.Int()
+  token              String   @db.VarChar(255)
   gateway            String   @db.VarChar(100)
   transactionDate    DateTime @default(now()) @map("transaction_date")
   accountNumber      String?  @map("account_number") @db.VarChar(100)
